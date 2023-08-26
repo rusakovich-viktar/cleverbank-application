@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import ru.clevertec.model.Account;
+import ru.clevertec.model.User;
 import ru.clevertec.repository.AccountRepository;
 import ru.clevertec.service.AccountService;
 
@@ -54,6 +55,11 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Long findUserIdByLogin(String userLogin) {
         return accountRepository.findUserIdByLogin(userLogin);
+    }
+
+    @Override
+    public User findUserByLogin(String login) {
+        return accountRepository.findUserByLogin(login);
     }
 
     @Override

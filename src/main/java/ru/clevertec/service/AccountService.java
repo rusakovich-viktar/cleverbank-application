@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
 import ru.clevertec.model.Account;
+import ru.clevertec.model.User;
 
 public interface AccountService {
     void replenish(Account account, BigDecimal amount);
@@ -20,5 +21,9 @@ public interface AccountService {
 
     Long findUserIdByLogin(String userLogin);
 
+    User findUserByLogin(String login);
+
     List<Account> findAccountsByUserId(Long userId);
+
+
 }

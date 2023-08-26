@@ -1,4 +1,7 @@
 database:
+  driver-class-name: org.postgresql.Driver
   url: jdbc:postgresql://localhost:5432/postgres
   username: postgres
   password: root
+  min-connection: 10
+  max-connection: 25

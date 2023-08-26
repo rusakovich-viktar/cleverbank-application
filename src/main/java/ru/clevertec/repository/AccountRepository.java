@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
 import ru.clevertec.model.Account;
+import ru.clevertec.model.User;
 
 public interface AccountRepository {
 
@@ -12,6 +13,8 @@ public interface AccountRepository {
     List<Account> findAccountsByUserLogin(String userLogin);
 
     Long findUserIdByLogin(String login);
+
+    User findUserByLogin(String login);
 
     List<Account> findAccountsByUserId(Long userId);
 
