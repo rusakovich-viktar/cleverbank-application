@@ -14,18 +14,19 @@ public class DbUtilsYaml {
         Connection connection = null;
         try {
             Yaml yaml = new Yaml();
-            InputStream inputStream = new FileInputStream("src/main/resources/database.yml");
-            Map<String, Map<String, String>> configMap = yaml.load(inputStream);
-            Map<String, String> dbConfig = configMap.get("database");
-            String url = dbConfig.get("url");
-            String username = dbConfig.get("username");
-            String password = dbConfig.get("password");
-            connection = DriverManager.getConnection(url, username, password);
+            try (InputStream inputStream = new FileInputStream("src/main/resources/database.yml")) {
+                Map<String, Map<String, String>> configMap = yaml.load(inputStream);
+                Map<String, String> dbConfig = configMap.get("database");
+                String url = dbConfig.get("url");
+                String username = dbConfig.get("username");
+                String password = dbConfig.get("password");
+                connection = DriverManager.getConnection(url, username, password);
+            } catch (SQLException e) {
+                System.out.println("SQLException");
+                e.printStackTrace();
+            }
         } catch (IOException e) {
             System.out.println("IOException");
-            e.printStackTrace();
-        } catch (SQLException e) {
-            System.out.println("SQLException");
             e.printStackTrace();
         }
         return connection;
