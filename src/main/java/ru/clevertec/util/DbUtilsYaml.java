@@ -14,7 +14,7 @@ public class DbUtilsYaml {
         Connection connection = null;
         try {
             Yaml yaml = new Yaml();
-            InputStream inputStream = new FileInputStream("C:\\Java\\ConsoleAppSimple\\simpleSQL\\src\\main\\resources\\database.yml");
+            InputStream inputStream = new FileInputStream("src/main/resources/database.yml");
             Map<String, Map<String, String>> configMap = yaml.load(inputStream);
             Map<String, String> dbConfig = configMap.get("database");
             String url = dbConfig.get("url");
