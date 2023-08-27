@@ -16,7 +16,11 @@ public interface AccountRepository {
 
     User findUserByLogin(String login);
 
+    User findUserByLoginAndPassword(String login, String password);
+
     List<Account> findAccountsByUserId(Long userId);
+
+    void updateAccount(Account account);
 
 
 }

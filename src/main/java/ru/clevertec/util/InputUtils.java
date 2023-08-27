@@ -16,7 +16,7 @@ public class InputUtils {
         do {
             System.out.println(message + ":");
             while (!SCANNER.hasNextDouble()) {
-                System.out.println("Введенное не является числом.");
+                System.err.println("Введенное значение не является числом.");
                 SCANNER.next();
             }
             number = SCANNER.nextInt();
@@ -31,7 +31,7 @@ public class InputUtils {
 
     private static boolean isNotInBounds(int number, int bound) {
         if (number < 1 || number > bound) {
-            System.out.println("Введенное не является положительным числом.");
+            System.err.println("Введенное значение вышло за границы допустимых значений.");
         }
         return number < 1 || number > bound;
     }

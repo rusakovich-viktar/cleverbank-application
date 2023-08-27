@@ -1,5 +1,6 @@
 package ru.clevertec.repository.impl;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -115,6 +116,37 @@ public class AccountRepositoryImpl implements AccountRepository {
     }
 
     @Override
+    public User findUserByLoginAndPassword(String login, String password) {
+        String sql = "SELECT * FROM users WHERE login = ? AND password = ?";
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, login);
+            preparedStatement.setString(2, password);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    User user = new User();
+                    user.setId(resultSet.getLong("id"));
+                    user.setIdentificationNumberOfPassport(resultSet.getString("identification_number_of_passport"));
+                    user.setFirstName(resultSet.getString("first_name"));
+                    user.setLastName(resultSet.getString("last_name"));
+                    user.setPatronymic(resultSet.getString("patronymic"));
+                    user.setLogin(resultSet.getString("login"));
+                    user.setPassword(resultSet.getString("password"));
+
+                    // Здесь можно добавить код для загрузки связанных счетов пользователя
+
+                    return user;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    @Override
     public List<Account> findAccountsByUserId(Long userId) {
         List<Account> accounts = new ArrayList<>();
 //        String query = "SELECT id, account_number, balance, currency, account_opening_date FROM accounts WHERE user_id = ?";
@@ -141,7 +173,22 @@ public class AccountRepositoryImpl implements AccountRepository {
         }
         return accounts;
     }
+
+    @Override
+    public void updateAccount(Account account) {
+        try (Connection connection = DbUtilsYaml.connection()) {
+            String query = "UPDATE accounts SET balance = ? WHERE id = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+                preparedStatement.setBigDecimal(1, account.getBalance());
+                preparedStatement.setLong(2, account.getId());
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
+
 
 
 
