@@ -5,11 +5,16 @@ import static ru.clevertec.util.Constants.CASH;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.Currency;
+import ru.clevertec.model.Account;
+import ru.clevertec.model.Bank;
 import ru.clevertec.model.Transaction;
+import ru.clevertec.model.TransactionType;
 import ru.clevertec.repository.TransactionRepository;
-import ru.clevertec.util.Constants;
 import ru.clevertec.util.DbUtilsYaml;
 
 public class TransactionRepositoryImpl implements TransactionRepository {
@@ -18,9 +23,9 @@ public class TransactionRepositoryImpl implements TransactionRepository {
     public TransactionRepositoryImpl(Connection connection) {
     }
 
-    @Override
     public void createTransaction(Transaction transaction) {
         String query = "INSERT INTO transactions (currency, amount, source_account_id, target_account_id, source_bank_id, target_bank_id, timestamp, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
         try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setString(1, transaction.getCurrency().getCurrencyCode());
             preparedStatement.setBigDecimal(2, transaction.getAmount());
@@ -33,6 +38,7 @@ public class TransactionRepositoryImpl implements TransactionRepository {
             if (transaction.getSourceBank() != null) {
                 preparedStatement.setLong(5, transaction.getSourceBank().getId());
             } else {
+                transaction.setSourceBank(transaction.getTargetBank());
                 preparedStatement.setLong(5, CASH);
             }
             if (transaction.getTargetBank() != null) {
@@ -44,9 +50,52 @@ public class TransactionRepositoryImpl implements TransactionRepository {
             preparedStatement.setString(8, transaction.getType().name());
 
             preparedStatement.executeUpdate();
+
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+
+    @Override
+    public void transferFunds(Account sourceAccount, Account targetAccount, BigDecimal amount) {
+        String transferQuery = "INSERT INTO transactions (currency, amount, source_account_id, target_account_id, source_bank_id, target_bank_id, timestamp, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(transferQuery)) {
+            connection.setAutoCommit(false); // Отключаем автоматическую фиксацию
+
+            Currency currency = sourceAccount.getCurrency();
+            LocalDateTime timestamp = LocalDateTime.now();
+            Bank sourceBank = sourceAccount.getBank();
+            Bank targetBank = targetAccount.getBank();
+
+            // Создаем транзакцию списания
+            preparedStatement.setString(1, currency.getCurrencyCode());
+            preparedStatement.setBigDecimal(2, amount.negate());
+            preparedStatement.setLong(3, sourceAccount.getId());
+            preparedStatement.setLong(4, targetAccount.getId());
+            preparedStatement.setLong(5, sourceBank.getId());
+            preparedStatement.setLong(6, targetBank.getId());
+            preparedStatement.setTimestamp(7, Timestamp.valueOf(timestamp));
+            preparedStatement.setString(8, TransactionType.TRANSFERRING.name());
+            preparedStatement.executeUpdate();
+
+            // Создаем транзакцию зачисления
+            preparedStatement.setBigDecimal(2, amount);
+            preparedStatement.setLong(3, targetAccount.getId());
+            preparedStatement.setLong(4, sourceAccount.getId());
+            preparedStatement.setLong(5, targetBank.getId());
+            preparedStatement.setLong(6, sourceBank.getId());
+            preparedStatement.setString(8, TransactionType.REPLENISHMENT.name());
+            preparedStatement.executeUpdate();
+
+            connection.commit(); // Фиксируем транзакцию
+            connection.setAutoCommit(true); // Включаем автоматическую фиксацию
+        } catch (SQLException e) {
+            throw new RuntimeException("Error transferring funds", e);
+        }
+
     }
 
 

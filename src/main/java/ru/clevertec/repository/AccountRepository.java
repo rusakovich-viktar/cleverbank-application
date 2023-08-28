@@ -22,5 +22,6 @@ public interface AccountRepository {
 
     void updateAccount(Account account);
 
+    Account findAccountByNumber(String accountNumber);
 
 }

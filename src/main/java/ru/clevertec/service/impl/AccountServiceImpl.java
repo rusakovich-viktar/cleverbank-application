@@ -3,6 +3,7 @@ package ru.clevertec.service.impl;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,8 +13,8 @@ import ru.clevertec.model.Transaction;
 import ru.clevertec.model.TransactionType;
 import ru.clevertec.model.User;
 import ru.clevertec.repository.AccountRepository;
-import ru.clevertec.repository.TransactionRepository;
 import ru.clevertec.service.AccountService;
+import ru.clevertec.service.TransactionService;
 
 @Getter
 @Setter
@@ -21,7 +22,7 @@ import ru.clevertec.service.AccountService;
 public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
-    private final TransactionRepository transactionRepository;
+    private final TransactionService transactionService;
 
 
     @Override
@@ -98,10 +99,10 @@ public class AccountServiceImpl implements AccountService {
         transaction.setSourceAccount(account);
         transaction.setTargetAccount(account);
         transaction.setSourceBank(null);
-        transaction.setTargetBank(null);
+        transaction.setTargetBank(account.getBank());
         transaction.setTimestamp(LocalDateTime.now());
         transaction.setType(TransactionType.REPLENISHMENT);
-        transactionRepository.createTransaction(transaction);
+        transactionService.createTransaction(transaction);
 
         System.out.println("Replenishment successful. New balance: " + account.getBalance());
     }
@@ -109,6 +110,8 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public void withdrawFromAccount(Long accountId, BigDecimal amount) {
         Account account = accountRepository.findById(accountId);
+
+
         if (account == null) {
             System.err.println("Account not found.");
             throw new IllegalArgumentException("Account not found");
@@ -128,13 +131,36 @@ public class AccountServiceImpl implements AccountService {
         transaction.setAmount(amount);
         transaction.setSourceAccount(account);
         transaction.setTargetAccount(account);
-        transaction.setSourceBank(null);
+        transaction.setSourceBank(account.getBank());
         transaction.setTargetBank(null);
         transaction.setTimestamp(LocalDateTime.now());
         transaction.setType(TransactionType.WITHDRAWAL);
-        transactionRepository.createTransaction(transaction);
+        transactionService.createTransaction(transaction);
+
+        System.out.println("|______________________________________");
+        System.out.println("|             Банковский чек");
+        System.out.println("|Чек: " + transaction.getId());
+        System.out.println("|" + transaction.getTimestamp().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")) + " " + transaction.getTimestamp().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+        System.out.println("|Тип транзакции " + transaction.getType().getTranslation());
+        System.out.println("|Банк отправителя>: " + transaction.getSourceBank().getName());
+//        System.out.println("|Банк получателя: " + transaction.getSourceBank().getName());
+        System.out.println("|Счет отправителя: " + transaction.getSourceAccount().getAccountNumber());
+        System.out.println("|Счет получателя: " + transaction.getTargetAccount().getAccountNumber());
+        System.out.println("|Сумма: " + transaction.getAmount() + " " + transaction.getCurrency().getCurrencyCode());
+        System.out.println("|_____________________________________");
+
 
         System.out.println("WITHDRAWAL successful. New balance: " + account.getBalance());
+    }
+
+    @Override
+    public void transferFunds(Long senderAccountId, Long receiverAccountId, BigDecimal amount) {
+
+    }
+
+    @Override
+    public Account findAccountByNumber(String accountNumber) {
+        return accountRepository.findAccountByNumber(accountNumber);
     }
 
 

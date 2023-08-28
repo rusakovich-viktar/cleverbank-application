@@ -26,17 +26,40 @@ public class AccountRepositoryImpl implements AccountRepository {
 
     @Override
     public Account findById(Long accountId) {
-        String query = "SELECT id, account_number, balance, currency, account_opening_date FROM accounts WHERE id = ?";
+        String query = "SELECT a.id AS account_id, a.account_number, a.balance, a.currency, a.account_opening_date, " +
+                "u.id AS user_id, u.identification_number_of_passport, u.first_name, u.last_name, " +
+                "b.id AS bank_id, b.name " +
+                "FROM accounts a " +
+                "JOIN users u ON a.user_id = u.id " +
+                "JOIN banks b ON a.bank_id = b.id " +
+                "WHERE a.id = ?";
+
         try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setLong(1, accountId);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
                     Account account = new Account();
-                    account.setId(resultSet.getLong("id"));
+                    account.setId(resultSet.getLong("account_id"));
                     account.setAccountNumber(resultSet.getString("account_number"));
                     account.setBalance(resultSet.getBigDecimal("balance"));
                     account.setCurrency(Currency.getInstance(resultSet.getString("currency")));
                     account.setAccountOpeningDate(resultSet.getTimestamp("account_opening_date").toLocalDateTime());
+
+                    User user = new User();
+                    user.setId(resultSet.getLong("user_id"));
+                    user.setIdentificationNumberOfPassport(resultSet.getString("identification_number_of_passport"));
+                    user.setFirstName(resultSet.getString("first_name"));
+                    user.setLastName(resultSet.getString("last_name"));
+
+
+                    Bank bank = new Bank();
+                    bank.setId(resultSet.getLong("bank_id"));
+                    bank.setName(resultSet.getString("name"));
+
+
+                    account.setUser(user);
+                    account.setBank(bank);
+
                     return account;
                 }
             }
@@ -45,6 +68,7 @@ public class AccountRepositoryImpl implements AccountRepository {
         }
         return null;
     }
+
 
     @Override
     public List<Account> findAccountsByUserLogin(String userLogin) {
@@ -173,6 +197,40 @@ public class AccountRepositoryImpl implements AccountRepository {
         }
         return accounts;
     }
+
+    @Override
+    public Account findAccountByNumber(String accountNumber) {
+        String queryAll = "SELECT a.*, b.name, u.id, u.last_name  FROM accounts a  JOIN banks b ON a.bank_id = b.id  JOIN users u ON a.user_id = u.id  WHERE account_number = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(queryAll)) {
+            preparedStatement.setString(1, accountNumber);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    Account account = new Account();
+                    account.setId(resultSet.getLong("id"));
+                    account.setAccountNumber(resultSet.getString("account_number"));
+                    account.setBalance(resultSet.getBigDecimal("balance"));
+                    account.setCurrency(Currency.getInstance(resultSet.getString("currency")));
+                    account.setAccountOpeningDate(resultSet.getTimestamp("account_opening_date").toLocalDateTime());
+
+                    Bank bank = new Bank();
+                    bank.setId(resultSet.getLong("bank_id"));
+                    bank.setName(resultSet.getString("name"));
+
+                    User user = new User();
+                    user.setId(resultSet.getLong("user_id"));
+                    user.setLastName(resultSet.getString("last_name"));
+                    account.setBank(bank);
+                    account.setUser(user);
+
+                    return account;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
 
     @Override
     public void updateAccount(Account account) {

@@ -12,7 +12,7 @@ public class DrawUI {
         System.out.println("1. View account data");
         System.out.println("2. Показать информацию о счетах");
         System.out.println("3. Операции со счетами");
-        System.out.println("4. Выйти");
+        System.out.println("4. Завершить сеанс и выйти");
 
     }
 
@@ -21,9 +21,18 @@ public class DrawUI {
         System.out.println("************************************************************");
         System.out.println("*               Операции со счетом                         *");
         System.out.println("************************************************************");
-        System.out.println("1. Пополнить счет");
-        System.out.println("2. Снять со счета");
+        System.out.println("1. Пополнить счет (наличные)");
+        System.out.println("2. Снять со счета (наличные)");
         System.out.println("3. Перевод на другой счет");
+    }
+
+    public static void drawTransactionTargetMenu() {
+        System.out.println();
+        System.out.println("************************************************************");
+        System.out.println("*               Выберите направление перевода              *");
+        System.out.println("************************************************************");
+        System.out.println("1. Себе");
+        System.out.println("2. Другому клиенту");
     }
 
     public static void drawReplenishOperationHeader() {
@@ -43,30 +52,44 @@ public class DrawUI {
     public static void drawTransferOperationHeader() {
         System.out.println();
         System.out.println("************************************************************");
-        System.out.println("*               Перевод на другой счет                     *");
+        System.out.println("*                  Перевод на другой счет                  *");
         System.out.println("************************************************************");
     }
 
-    public static void drawEnterLogin() {
+    public static void drawTransferSourceHeader() {
+        System.out.println("************************************************************");
+        System.out.println("*   Выберите счет, с которого вы хотите перевести деньги   *");
+        System.out.println("************************************************************");
+    }
+
+    public static void drawEnterLoginOperationHeader() {
         System.out.println();
         System.out.println("************************************************************");
         System.out.println("*             Пожалуйста, введите логин:                   *");
         System.out.println("************************************************************");
     }
 
-    public static void drawEnterPassword() {
+    public static void drawEnterPasswordOperationHeader() {
         System.out.println();
         System.out.println("************************************************************");
         System.out.println("*             Пожалуйста, введите пароль:                  *");
         System.out.println("************************************************************");
     }
 
-    public static void drawViewAllAccounts() {
+    public static void drawViewAllAccountsOperationHeader() {
         System.out.println();
         System.out.println("************************************************************");
-        System.out.println("*                 View all accounts:                       *");
+        System.out.println("*            Показать информацию о счетах:                 *");
         System.out.println("************************************************************");
     }
+
+    public static void drawDetailsAccountInfoOperationHeader() {
+        System.out.println();
+        System.out.println("************************************************************");
+        System.out.println("*   Выберите счет для отображения детальной информации:    *");
+        System.out.println("************************************************************");
+    }
+
 
     public static void drawLogo() {
         System.out.println();
