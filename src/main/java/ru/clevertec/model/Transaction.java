@@ -15,12 +15,12 @@ import lombok.Setter;
 public class Transaction {
 
     private Long id;
-    private Currency currency; // Валюта
-    private BigDecimal amount; // количество
-    private Account sourceAccount; // Счет-источник
-    private Account targetAccount; // Счет-получатель
-    private Bank sourceBank; // банк-источник
-    private Bank targetBank; // банк-получатель
+    private Currency currency;
+    private BigDecimal amount;
+    private Account sourceAccount;
+    private Account targetAccount;
+    private Bank sourceBank;
+    private Bank targetBank;
     private LocalDateTime timestamp;
     private TransactionType type;
 }

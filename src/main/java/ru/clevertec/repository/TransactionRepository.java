@@ -6,8 +6,8 @@ import ru.clevertec.model.Transaction;
 
 public interface TransactionRepository {
 
-    void createTransaction(Transaction transaction);
+    Long createTransaction(Transaction transaction);
 
-    void transferFunds(Account sourceAccount, Account targetAccount, BigDecimal amount);
+    void doTransferFunds(Account sourceAccount, Account targetAccount, BigDecimal amount);
 
 }
