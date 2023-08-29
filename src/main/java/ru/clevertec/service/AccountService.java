@@ -11,10 +11,6 @@ public interface AccountService {
 
     List<Account> findAccountsByUserId(Long userId);
 
-    void replenishAccountBalance(Account account, BigDecimal amount);
-
-    void withdrawFromAccount(Account account, BigDecimal amount);
-
     Account findAccountByAccountNumber(String accountNumber);
 
 }

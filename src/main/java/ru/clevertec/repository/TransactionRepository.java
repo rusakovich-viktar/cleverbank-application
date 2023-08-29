@@ -10,4 +10,8 @@ public interface TransactionRepository {
 
     void doTransferFunds(Account sourceAccount, Account targetAccount, BigDecimal amount);
 
+    void replenishAccountBalance(Account account, BigDecimal amount);
+
+    void withdrawFromAccount(Account account, BigDecimal amount);
+
 }
