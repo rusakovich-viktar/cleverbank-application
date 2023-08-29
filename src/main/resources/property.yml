@@ -1,0 +1,6 @@
+hikari:
+  jdbcUrl: "jdbc:postgresql://localhost:5432/postgres"
+  username: "postgres"
+  password: "root"
+  minimumIdle: 10
+  maximumPoolSize: 25
