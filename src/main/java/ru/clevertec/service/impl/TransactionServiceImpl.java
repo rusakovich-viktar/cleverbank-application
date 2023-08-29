@@ -1,6 +1,7 @@
 package ru.clevertec.service.impl;
 
 import java.math.BigDecimal;
+import java.sql.Connection;
 import ru.clevertec.model.Account;
 import ru.clevertec.model.Transaction;
 import ru.clevertec.repository.TransactionRepository;
@@ -15,8 +16,8 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public Long createTransaction(Transaction transaction) {
-        return transactionRepository.createTransaction(transaction);
+    public Long createTransaction(Transaction transaction, Connection connection) {
+        return transactionRepository.createTransaction(transaction, connection);
     }
 
     @Override

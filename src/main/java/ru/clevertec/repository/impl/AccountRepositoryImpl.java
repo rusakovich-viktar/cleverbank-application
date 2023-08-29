@@ -22,7 +22,7 @@ public class AccountRepositoryImpl implements AccountRepository {
     public static final String FIND_ACCOUNT_BY_ACCOUNT_NUMBER = "SELECT a.*, b.name, u.id, u.last_name  FROM accounts a  JOIN banks b ON a.bank_id = b.id  JOIN users u ON a.user_id = u.id  WHERE account_number = ?";
     public static final String UPDATE_ACCOUNT_BALANCE = "UPDATE accounts SET balance = ? WHERE id = ?";
 
-    private Connection connection;
+
 
     @Override
     public User findUserByLoginAndPassword(String login, String password) {
@@ -36,7 +36,7 @@ public class AccountRepositoryImpl implements AccountRepository {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.error("SQLException from findUserByLoginAndPassword", e);
         }
         return null;
     }
@@ -70,7 +70,7 @@ public class AccountRepositoryImpl implements AccountRepository {
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Error fetching accounts for user with ID: " + userId, e);
+            log.error("Error fetching accounts for user with ID:" + userId, e);
         }
         return accounts;
     }
@@ -96,7 +96,7 @@ public class AccountRepositoryImpl implements AccountRepository {
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            log.error("SQLException from findAccountByAccountNumber", e);
         }
         return null;
         //TODO
@@ -120,16 +120,15 @@ public class AccountRepositoryImpl implements AccountRepository {
     }
 
     @Override
-    public void updateAccountBalance(Long accountId, BigDecimal newBalance) {
-        try (Connection connection = ConnectionPool.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_ACCOUNT_BALANCE)) {
+    public void updateAccountBalance(Long accountId, BigDecimal newBalance, Connection connection) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_ACCOUNT_BALANCE)) {
             preparedStatement.setBigDecimal(1, newBalance);
-            preparedStatement.setLong(22, accountId);
+            preparedStatement.setLong(2, accountId);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            log.error("LOG4FG2-Error updating account balance-LOG4FG2 ", e);
+            log.error("Произошла ошибка при обновлении баланса", e);
+            throw new RuntimeException();
         }
-
     }
 }
 

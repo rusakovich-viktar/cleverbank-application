@@ -1,117 +1,211 @@
 package ru.clevertec.repository.impl;
 
-import static ru.clevertec.util.Constants.CASH;
+import static ru.clevertec.model.TransactionType.WITHDRAWAL;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Currency;
+import java.time.format.DateTimeFormatter;
+import lombok.extern.log4j.Log4j2;
 import ru.clevertec.model.Account;
-import ru.clevertec.model.Bank;
 import ru.clevertec.model.Transaction;
 import ru.clevertec.model.TransactionType;
+import ru.clevertec.repository.AccountRepository;
 import ru.clevertec.repository.TransactionRepository;
-import ru.clevertec.util.DbUtilsYaml;
+import ru.clevertec.repository.connection.ConnectionPool;
 
+@Log4j2
 public class TransactionRepositoryImpl implements TransactionRepository {
-    private final Connection connection = DbUtilsYaml.connection();
+    public static final String CREATE_TRANSACTION = "INSERT INTO transactions (currency, amount, source_account_id, target_account_id, source_bank_id, target_bank_id, timestamp, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
+    private final AccountRepository accountRepository;
 
-    public TransactionRepositoryImpl(Connection connection) {
+    public TransactionRepositoryImpl(AccountRepository accountRepository) {
+        this.accountRepository = accountRepository;
     }
 
-    public void createTransaction(Transaction transaction) {
-        String query = "INSERT INTO transactions (currency, amount, source_account_id, target_account_id, source_bank_id, target_bank_id, timestamp, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+    public Long createTransaction(Transaction transaction, Connection connection) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(CREATE_TRANSACTION, Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setString(1, transaction.getCurrency().getCurrencyCode());
             preparedStatement.setBigDecimal(2, transaction.getAmount());
-            if (transaction.getSourceAccount() != null) {
-                preparedStatement.setLong(3, transaction.getSourceAccount().getId());
-            }
-            if (transaction.getTargetAccount() != null) {
-                preparedStatement.setLong(4, transaction.getTargetAccount().getId());
-            }
-            if (transaction.getSourceBank() != null) {
-                preparedStatement.setLong(5, transaction.getSourceBank().getId());
-            } else {
-                transaction.setSourceBank(transaction.getTargetBank());
-                preparedStatement.setLong(5, CASH);
-            }
-            if (transaction.getTargetBank() != null) {
-                preparedStatement.setLong(6, transaction.getTargetBank().getId());
-            } else {
-                preparedStatement.setLong(6, CASH);
-            }
+            preparedStatement.setLong(3, transaction.getSourceAccount().getId());
+            preparedStatement.setLong(4, transaction.getTargetAccount().getId());
+            preparedStatement.setLong(5, transaction.getSourceBank().getId());
+            preparedStatement.setLong(6, transaction.getTargetBank().getId());
             preparedStatement.setTimestamp(7, Timestamp.valueOf(transaction.getTimestamp()));
             preparedStatement.setString(8, transaction.getType().name());
 
-            preparedStatement.executeUpdate();
-
-
+            int affectedRows = preparedStatement.executeUpdate();
+            if (affectedRows > 0) {
+                ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    return generatedKeys.getLong(1);
+                }
+            }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            log.error("Произошла ошибка при создании транзакции", e);
+            throw new RuntimeException();
+        }
+        return null;
+    }
+
+    @Override
+    public void replenishAccountBalance(Account account, BigDecimal amount) {
+
+        Connection connection = null;
+        try {
+            connection = ConnectionPool.getConnection();
+            connection.setAutoCommit(false);
+
+            Transaction transaction = new Transaction();
+            transaction.setCurrency(account.getCurrency());
+            transaction.setAmount(amount);
+            transaction.setSourceAccount(account);
+            transaction.setTargetAccount(account);
+            transaction.setSourceBank(account.getBank());
+            transaction.setTargetBank(account.getBank());
+            transaction.setTimestamp(LocalDateTime.now());
+            transaction.setType(TransactionType.REPLENISHMENT);
+            Long transactionId = createTransaction(transaction, connection);
+
+            accountRepository.updateAccountBalance(account.getId(), account.getBalance().add(amount), connection);
+
+            viewBankReceipt(transaction, transactionId);
+
+            System.out.println("Replenishment successful. New balance: " + account.getBalance().add(transaction.getAmount()));
+
+            connection.commit();
+        } catch (Exception e) {
+            try {
+                if (connection != null) {
+                    connection.rollback();
+                }
+            } catch (SQLException ex) {
+                log.error("SQLException, connection.rollback()", ex);
+            }
+            log.error("Ошибка пополнения средств", e);
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.setAutoCommit(true);
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                log.error("SQLException from finallyBlock", e);
+            }
+        }
+    }
+
+    @Override
+    public void doTransferFunds(Account sourceAccount, Account targetAccount, BigDecimal amount) {
+
+        Connection connection = null;
+        try {
+            connection = ConnectionPool.getConnection();
+            connection.setAutoCommit(false);
+
+            Transaction transaction = new Transaction();
+            transaction.setCurrency(sourceAccount.getCurrency());
+            transaction.setAmount(amount);
+            transaction.setSourceAccount(sourceAccount);
+            transaction.setTargetAccount(targetAccount);
+            transaction.setSourceBank(sourceAccount.getBank());
+            transaction.setTargetBank(targetAccount.getBank());
+            transaction.setTimestamp(LocalDateTime.now());
+            transaction.setType(TransactionType.TRANSFERRING);
+            Long transactionId = createTransaction(transaction, connection);
+
+            accountRepository.updateAccountBalance(sourceAccount.getId(), sourceAccount.getBalance().subtract(amount), connection);
+
+            accountRepository.updateAccountBalance(targetAccount.getId(), targetAccount.getBalance().add(amount), connection);
+
+            viewBankReceipt(transaction, transactionId);
+
+            System.out.println("Перевод успешно выполнен");
+
+            connection.commit();
+        } catch (Exception e) {
+            try {
+                if (connection != null) {
+                    connection.rollback();
+                }
+            } catch (SQLException ex) {
+                log.error("SQLException, connection.rollback()", ex);
+            }
+            log.error("Ошибка пополнения средств", e);
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.setAutoCommit(true);
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                log.error("SQLException from finallyBlock", e);
+            }
         }
     }
 
 
     @Override
-    public void transferFunds(Account sourceAccount, Account targetAccount, BigDecimal amount) {
-        String transferQuery = "INSERT INTO transactions (currency, amount, source_account_id, target_account_id, source_bank_id, target_bank_id, timestamp, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    public void withdrawFromAccount(Account account, BigDecimal amount) {
+        Connection connection = null;
+        try {
+            connection = ConnectionPool.getConnection();
+            connection.setAutoCommit(false);
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement(transferQuery)) {
-            connection.setAutoCommit(false); // Отключаем автоматическую фиксацию
+            Transaction transaction = new Transaction();
+            transaction.setCurrency(account.getCurrency());
+            transaction.setAmount(amount);
+            transaction.setSourceAccount(account);
+            transaction.setTargetAccount(account);
+            transaction.setSourceBank(account.getBank());
+            transaction.setTargetBank(account.getBank());
+            transaction.setTimestamp(LocalDateTime.now());
+            transaction.setType(WITHDRAWAL);
+            Long transactionId = createTransaction(transaction, connection);
+            accountRepository.updateAccountBalance(account.getId(), account.getBalance().subtract(amount), connection);
 
-            Currency currency = sourceAccount.getCurrency();
-            LocalDateTime timestamp = LocalDateTime.now();
-            Bank sourceBank = sourceAccount.getBank();
-            Bank targetBank = targetAccount.getBank();
+            viewBankReceipt(transaction, transactionId);
 
-            // Создаем транзакцию списания
-            preparedStatement.setString(1, currency.getCurrencyCode());
-            preparedStatement.setBigDecimal(2, amount.negate());
-            preparedStatement.setLong(3, sourceAccount.getId());
-            preparedStatement.setLong(4, targetAccount.getId());
-            preparedStatement.setLong(5, sourceBank.getId());
-            preparedStatement.setLong(6, targetBank.getId());
-            preparedStatement.setTimestamp(7, Timestamp.valueOf(timestamp));
-            preparedStatement.setString(8, TransactionType.TRANSFERRING.name());
-            preparedStatement.executeUpdate();
-
-            // Создаем транзакцию зачисления
-            preparedStatement.setBigDecimal(2, amount);
-            preparedStatement.setLong(3, targetAccount.getId());
-            preparedStatement.setLong(4, sourceAccount.getId());
-            preparedStatement.setLong(5, targetBank.getId());
-            preparedStatement.setLong(6, sourceBank.getId());
-            preparedStatement.setString(8, TransactionType.REPLENISHMENT.name());
-            preparedStatement.executeUpdate();
-
-            connection.commit(); // Фиксируем транзакцию
-            connection.setAutoCommit(true); // Включаем автоматическую фиксацию
-        } catch (SQLException e) {
-            throw new RuntimeException("Error transferring funds", e);
+            System.out.println("withdrawal successful. New balance: " + account.getBalance().subtract(transaction.getAmount()));
+            connection.commit();
+        } catch (Exception e) {
+            try {
+                if (connection != null) {
+                    connection.rollback();
+                }
+            } catch (SQLException ex) {
+                log.error("SQLException, connection.rollback()", ex);
+            }
+            log.error("Ошибка пополнения средств", e);
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.setAutoCommit(true);
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                log.error("SQLException from finallyBlock", e);
+            }
         }
-
     }
 
-
-//    public void saveTransaction(Transaction transaction) throws SQLException {
-//        String sql = "INSERT INTO transactions (source_account_id, target_account_id, amount, type, timestamp) VALUES (?, ?, ?, ?, ?)";
-//
-//        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-//            preparedStatement.setLong(1, transaction.getSourceAccount().getId());
-//            preparedStatement.setLong(2, transaction.getTargetAccount().getId());
-//            preparedStatement.setBigDecimal(3, transaction.getAmount());
-//            preparedStatement.setString(4, transaction.getType().toString());
-//            preparedStatement.setTimestamp(5, Timestamp.valueOf(transaction.getTimestamp()));
-//
-//            preparedStatement.executeUpdate();
-//        }}
-
-
+    private void viewBankReceipt(Transaction transaction, Long transactionId) {
+        //TODO TEST_METHOD
+        System.out.println("|______________________________________");
+        System.out.println("|             Банковский чек");
+        System.out.println("|Чек: " + transactionId);
+        System.out.println("|" + transaction.getTimestamp().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")) + " " + transaction.getTimestamp().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+        System.out.println("|Тип транзакции " + transaction.getType().getTranslation());
+        System.out.println("|Банк отправителя: " + transaction.getSourceBank().getName());
+        System.out.println("|Банк получателя: " + transaction.getTargetBank().getName());
+        System.out.println("|Счет отправителя: " + transaction.getSourceAccount().getAccountNumber());
+        System.out.println("|Счет получателя: " + transaction.getTargetAccount().getAccountNumber());
+        System.out.println("|Сумма: " + transaction.getAmount() + " " + transaction.getCurrency().getCurrencyCode());
+        System.out.println("|_____________________________________");
+    }
 }
-

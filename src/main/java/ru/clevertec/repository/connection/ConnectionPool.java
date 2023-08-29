@@ -6,8 +6,10 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
+import lombok.extern.log4j.Log4j2;
 import org.yaml.snakeyaml.Yaml;
 
+@Log4j2
 public class ConnectionPool {
 
     private static HikariDataSource dataSource = createDataSource();
@@ -30,6 +32,7 @@ public class ConnectionPool {
             config.setMaximumPoolSize((int) property.get("maximumPoolSize"));
             return config;
         } catch (Exception e) {
+            log.error("Error loading configuration", e);
             throw new RuntimeException("Error loading configuration", e);
         }
     }
