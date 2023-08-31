@@ -1,5 +1,21 @@
 package ru.clevertec.repository.impl;
 
+import static ru.clevertec.util.Constants.Attributes.BALANCE;
+import static ru.clevertec.util.Constants.Attributes.BANK_ID;
+import static ru.clevertec.util.Constants.Attributes.CURRENCY;
+import static ru.clevertec.util.Constants.Attributes.DB_ACCOUNT_NUMBER;
+import static ru.clevertec.util.Constants.Attributes.DB_ACCOUNT_OPENING_DATE;
+import static ru.clevertec.util.Constants.Attributes.DB_FIRST_NAME;
+import static ru.clevertec.util.Constants.Attributes.DB_IDENTIFICATION_NUMBER_OF_PASSPORT;
+import static ru.clevertec.util.Constants.Attributes.DB_LAST_NAME;
+import static ru.clevertec.util.Constants.Attributes.DB_USER_ID;
+import static ru.clevertec.util.Constants.Attributes.ID;
+import static ru.clevertec.util.Constants.Attributes.LOGIN;
+import static ru.clevertec.util.Constants.Attributes.NAME;
+import static ru.clevertec.util.Constants.Attributes.PASSWORD;
+import static ru.clevertec.util.Constants.Attributes.PATRONYMIC;
+import static ru.clevertec.util.Constants.Messages.ERROR_FROM_UPDATING_BALANCE;
+
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -23,7 +39,6 @@ public class AccountRepositoryImpl implements AccountRepository {
     public static final String UPDATE_ACCOUNT_BALANCE = "UPDATE accounts SET balance = ? WHERE id = ?";
 
 
-
     @Override
     public User findUserByLoginAndPassword(String login, String password) {
         try (Connection connection = ConnectionPool.getConnection();
@@ -43,13 +58,13 @@ public class AccountRepositoryImpl implements AccountRepository {
 
     private User createUserFromResultSet(ResultSet resultSet) throws SQLException {
         User user = new User();
-        user.setId(resultSet.getLong("id"));
-        user.setIdentificationNumberOfPassport(resultSet.getString("identification_number_of_passport"));
-        user.setFirstName(resultSet.getString("first_name"));
-        user.setLastName(resultSet.getString("last_name"));
-        user.setPatronymic(resultSet.getString("patronymic"));
-        user.setLogin(resultSet.getString("login"));
-        user.setPassword(resultSet.getString("password"));
+        user.setId(resultSet.getLong(ID));
+        user.setIdentificationNumberOfPassport(resultSet.getString(DB_IDENTIFICATION_NUMBER_OF_PASSPORT));
+        user.setFirstName(resultSet.getString(DB_FIRST_NAME));
+        user.setLastName(resultSet.getString(DB_LAST_NAME));
+        user.setPatronymic(resultSet.getString(PATRONYMIC));
+        user.setLogin(resultSet.getString(LOGIN));
+        user.setPassword(resultSet.getString(PASSWORD));
         return user;
     }
 
@@ -88,8 +103,8 @@ public class AccountRepositoryImpl implements AccountRepository {
                     account.setBank(bank);
 
                     User user = new User();
-                    user.setId(resultSet.getLong("user_id"));
-                    user.setLastName(resultSet.getString("last_name"));
+                    user.setId(resultSet.getLong(DB_USER_ID));
+                    user.setLastName(resultSet.getString(DB_LAST_NAME));
                     account.setUser(user);
 
                     return account;
@@ -104,18 +119,18 @@ public class AccountRepositoryImpl implements AccountRepository {
 
     private static Account createAccountFromResultSet(ResultSet resultSet) throws SQLException {
         Account account = new Account();
-        account.setId(resultSet.getLong("id"));
-        account.setAccountNumber(resultSet.getString("account_number"));
-        account.setBalance(resultSet.getBigDecimal("balance"));
-        account.setCurrency(Currency.getInstance(resultSet.getString("currency")));
-        account.setAccountOpeningDate(resultSet.getTimestamp("account_opening_date").toLocalDateTime());
+        account.setId(resultSet.getLong(ID));
+        account.setAccountNumber(resultSet.getString(DB_ACCOUNT_NUMBER));
+        account.setBalance(resultSet.getBigDecimal(BALANCE));
+        account.setCurrency(Currency.getInstance(resultSet.getString(CURRENCY)));
+        account.setAccountOpeningDate(resultSet.getTimestamp(DB_ACCOUNT_OPENING_DATE).toLocalDateTime());
         return account;
     }
 
     private static Bank createBankFromResultSet(ResultSet resultSet) throws SQLException {
         Bank bank = new Bank();
-        bank.setId(resultSet.getLong("bank_id"));
-        bank.setName(resultSet.getString("name"));
+        bank.setId(resultSet.getLong(BANK_ID));
+        bank.setName(resultSet.getString(NAME));
         return bank;
     }
 
@@ -126,7 +141,7 @@ public class AccountRepositoryImpl implements AccountRepository {
             preparedStatement.setLong(2, accountId);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            log.error("Произошла ошибка при обновлении баланса", e);
+            log.error(ERROR_FROM_UPDATING_BALANCE, e);
             throw new RuntimeException();
         }
     }

@@ -1,6 +1,10 @@
 package ru.clevertec.repository.impl;
 
+import static ru.clevertec.model.TransactionType.REPLENISHMENT;
+import static ru.clevertec.model.TransactionType.TRANSFERRING;
 import static ru.clevertec.model.TransactionType.WITHDRAWAL;
+import static ru.clevertec.util.Constants.Messages.ERROR_FROM_CREATE_TRANSACTION;
+import static ru.clevertec.util.Constants.Messages.ERROR_REPLENISHMENT;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -14,7 +18,6 @@ import java.time.format.DateTimeFormatter;
 import lombok.extern.log4j.Log4j2;
 import ru.clevertec.model.Account;
 import ru.clevertec.model.Transaction;
-import ru.clevertec.model.TransactionType;
 import ru.clevertec.repository.AccountRepository;
 import ru.clevertec.repository.TransactionRepository;
 import ru.clevertec.repository.connection.ConnectionPool;
@@ -47,7 +50,7 @@ public class TransactionRepositoryImpl implements TransactionRepository {
                 }
             }
         } catch (SQLException e) {
-            log.error("Произошла ошибка при создании транзакции", e);
+            log.error(ERROR_FROM_CREATE_TRANSACTION, e);
             throw new RuntimeException();
         }
         return null;
@@ -69,7 +72,7 @@ public class TransactionRepositoryImpl implements TransactionRepository {
             transaction.setSourceBank(account.getBank());
             transaction.setTargetBank(account.getBank());
             transaction.setTimestamp(LocalDateTime.now());
-            transaction.setType(TransactionType.REPLENISHMENT);
+            transaction.setType(REPLENISHMENT);
             Long transactionId = createTransaction(transaction, connection);
 
             accountRepository.updateAccountBalance(account.getId(), account.getBalance().add(amount), connection);
@@ -85,9 +88,9 @@ public class TransactionRepositoryImpl implements TransactionRepository {
                     connection.rollback();
                 }
             } catch (SQLException ex) {
-                log.error("SQLException, connection.rollback()", ex);
+                log.error("Exception, connection.rollback()", ex);
             }
-            log.error("Ошибка пополнения средств", e);
+            log.error(ERROR_REPLENISHMENT, e);
         } finally {
             try {
                 if (connection != null) {
@@ -95,7 +98,7 @@ public class TransactionRepositoryImpl implements TransactionRepository {
                     connection.close();
                 }
             } catch (SQLException e) {
-                log.error("SQLException from finallyBlock", e);
+                log.error("Exception from finallyBlock", e);
             }
         }
     }
@@ -116,7 +119,7 @@ public class TransactionRepositoryImpl implements TransactionRepository {
             transaction.setSourceBank(sourceAccount.getBank());
             transaction.setTargetBank(targetAccount.getBank());
             transaction.setTimestamp(LocalDateTime.now());
-            transaction.setType(TransactionType.TRANSFERRING);
+            transaction.setType(TRANSFERRING);
             Long transactionId = createTransaction(transaction, connection);
 
             accountRepository.updateAccountBalance(sourceAccount.getId(), sourceAccount.getBalance().subtract(amount), connection);
@@ -136,7 +139,7 @@ public class TransactionRepositoryImpl implements TransactionRepository {
             } catch (SQLException ex) {
                 log.error("SQLException, connection.rollback()", ex);
             }
-            log.error("Ошибка пополнения средств", e);
+            log.error(ERROR_REPLENISHMENT, e);
         } finally {
             try {
                 if (connection != null) {
@@ -144,7 +147,7 @@ public class TransactionRepositoryImpl implements TransactionRepository {
                     connection.close();
                 }
             } catch (SQLException e) {
-                log.error("SQLException from finallyBlock", e);
+                log.error("Exception from finallyBlock", e);
             }
         }
     }

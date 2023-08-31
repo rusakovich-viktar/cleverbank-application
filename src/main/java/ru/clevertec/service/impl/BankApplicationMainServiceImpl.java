@@ -1,5 +1,10 @@
 package ru.clevertec.service.impl;
 
+import static ru.clevertec.util.Constants.Messages.ENTER_A_NUMBER_BETWEEN_ONE_AND;
+import static ru.clevertec.util.Constants.Messages.INVALID_CHOICE_PLEASE_TRY_AGAIN;
+import static ru.clevertec.util.Constants.Messages.LOGIN_REFUSE_MESSAGE;
+import static ru.clevertec.util.Constants.Messages.LOGIN_SUCCESSFUL_MESSAGE;
+import static ru.clevertec.util.Constants.Messages.NO_ACCOUNTS_FOUND_FOR_THE_USER;
 import static ru.clevertec.util.DrawUI.drawStartMenuQ;
 import static ru.clevertec.util.DrawUI.drawTransactionMenu;
 import static ru.clevertec.util.DrawUI.drawTransactionTargetMenu;
@@ -64,9 +69,9 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
         User user = accountService.findUserByLoginAndPassword(userLogin, userPassword);
 
         if (user != null) {
-            System.out.println("Login successful.");
+            System.out.println(LOGIN_SUCCESSFUL_MESSAGE);
         } else {
-            System.err.println("Incorrect login or password. Please try again.");
+            System.err.println(LOGIN_REFUSE_MESSAGE);
         }
 
         return user;
@@ -82,7 +87,7 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
 
             drawStartMenuQ();
             int bound = 4;
-            int choice = readIntFromConsole("Введите число от 1 до " + bound, bound);
+            int choice = readIntFromConsole(ENTER_A_NUMBER_BETWEEN_ONE_AND + bound, bound);
 
             switch (choice) {
                 case 1 -> { //TODO rename
@@ -91,7 +96,7 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
                 case 3 ->
                         doMainOperationsWithAccount(transactionService, accountService, scanner, userByLoginAndPassword);
                 case 4 -> userLoggedIn = doLogoutAndExit();
-                default -> System.err.println("Invalid choice. Please try again.");
+                default -> System.err.println(INVALID_CHOICE_PLEASE_TRY_AGAIN);
             }
         }
         return userLoggedIn;
@@ -107,13 +112,13 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
     private void doMainOperationsWithAccount(TransactionService transactionService, AccountService accountService, Scanner scanner, User userByLoginAndPassword) {
         drawTransactionMenu();
         int boundTransactionChoice = 3;
-        int innerChoice = readIntFromConsole("Введите число от 1 до " + boundTransactionChoice, boundTransactionChoice);
+        int innerChoice = readIntFromConsole(ENTER_A_NUMBER_BETWEEN_ONE_AND + boundTransactionChoice, boundTransactionChoice);
 
         switch (innerChoice) {
             case 1 -> replenishInnerMenu(accountService, scanner, userByLoginAndPassword);
             case 2 -> withdrawInnerMenu(accountService, scanner, userByLoginAndPassword);
             case 3 -> transferInnerMenu(transactionService, accountService, scanner, userByLoginAndPassword);
-            default -> System.err.println("Invalid inner choice");
+            default -> System.err.println(INVALID_CHOICE_PLEASE_TRY_AGAIN);
         }
     }
 
@@ -138,7 +143,7 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
                 drawTransactionTargetMenu();
 
                 int boundTransactionChoice = 2;
-                int innerChoice = readIntFromConsole("Введите число от 1 до " + boundTransactionChoice, boundTransactionChoice);
+                int innerChoice = readIntFromConsole(ENTER_A_NUMBER_BETWEEN_ONE_AND + boundTransactionChoice, boundTransactionChoice);
 
                 switch (innerChoice) {
                     case 1 -> {
@@ -150,7 +155,7 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
                         if (innerAccountChoice >= 1 && innerAccountChoice <= accounts.size()) {
                             targetAccount = accounts.get(innerAccountChoice - 1);
                         } else {
-                            System.err.println("Invalid account choice.");
+                            System.err.println(INVALID_CHOICE_PLEASE_TRY_AGAIN);
                         }
                     }
                     case 2 -> {
@@ -174,10 +179,10 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
                     transactionService.doTransferFunds(sourceAccount, targetAccount, amountToTargetTransfer);
                 }
             } else {
-                System.err.println("Invalid account choice.");
+                System.err.println(INVALID_CHOICE_PLEASE_TRY_AGAIN);
             }
         } else {
-            System.err.println("No accounts found for the user.");
+            System.err.println(NO_ACCOUNTS_FOUND_FOR_THE_USER);
         }
 
     }
@@ -203,10 +208,10 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
                     transactionService.withdrawFromAccount(selectedAccount, amountToTargetWithdraw);
                 }
             } else {
-                System.err.println("Invalid account choice.");
+                System.err.println(INVALID_CHOICE_PLEASE_TRY_AGAIN);
             }
         } else {
-            System.err.println("No accounts found for the user.");
+            System.err.println(NO_ACCOUNTS_FOUND_FOR_THE_USER);
         }
     }
 
@@ -229,10 +234,10 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
 
                 transactionService.replenishAccountBalance(selectedAccount, amount);
             } else {
-                System.err.println("Invalid account choice.");
+                System.err.println(INVALID_CHOICE_PLEASE_TRY_AGAIN);
             }
         } else {
-            System.err.println("No accounts found for the user.");
+            System.err.println(NO_ACCOUNTS_FOUND_FOR_THE_USER);
         }
     }
 

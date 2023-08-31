@@ -1,7 +1,15 @@
 package ru.clevertec.repository.connection;
 
+import static ru.clevertec.util.Constants.Attributes.JDBC_URL;
+import static ru.clevertec.util.Constants.Attributes.MAXIMUM_POOL_SIZE;
+import static ru.clevertec.util.Constants.Attributes.MINIMUM_IDLE;
+import static ru.clevertec.util.Constants.Attributes.PASSWORD;
+import static ru.clevertec.util.Constants.Attributes.USERNAME;
+import static ru.clevertec.util.Constants.Messages.ERROR_LOADING_CONFIGURATION;
+
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -25,15 +33,15 @@ public class ConnectionPool {
             Map<String, Map<String, Object>> configMap = yaml.load(inputStream);
             Map<String, Object> property = configMap.get("hikari");
             HikariConfig config = new HikariConfig();
-            config.setJdbcUrl((String) property.get("jdbcUrl"));
-            config.setUsername((String) property.get("username"));
-            config.setPassword((String) property.get("password"));
-            config.setMinimumIdle((int) property.get("minimumIdle"));
-            config.setMaximumPoolSize((int) property.get("maximumPoolSize"));
+            config.setJdbcUrl((String) property.get(JDBC_URL));
+            config.setUsername((String) property.get(USERNAME));
+            config.setPassword((String) property.get(PASSWORD));
+            config.setMinimumIdle((int) property.get(MINIMUM_IDLE));
+            config.setMaximumPoolSize((int) property.get(MAXIMUM_POOL_SIZE));
             return config;
-        } catch (Exception e) {
-            log.error("Error loading configuration", e);
-            throw new RuntimeException("Error loading configuration", e);
+        } catch (IOException e) {
+            log.error(ERROR_LOADING_CONFIGURATION + " from {}: {}", configFile, e.getMessage());
+            throw new RuntimeException(ERROR_LOADING_CONFIGURATION, e);
         }
     }
 
