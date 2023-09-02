@@ -114,7 +114,6 @@ public class AccountRepositoryImpl implements AccountRepository {
             log.error("SQLException from findAccountByAccountNumber", e);
         }
         return null;
-        //TODO
     }
 
     private static Account createAccountFromResultSet(ResultSet resultSet) throws SQLException {
@@ -135,7 +134,7 @@ public class AccountRepositoryImpl implements AccountRepository {
     }
 
     @Override
-    public void updateAccountBalance(Long accountId, BigDecimal newBalance, Connection connection) {
+    public BigDecimal updateAccountBalance(Long accountId, BigDecimal newBalance, Connection connection) {
         try (PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_ACCOUNT_BALANCE)) {
             preparedStatement.setBigDecimal(1, newBalance);
             preparedStatement.setLong(2, accountId);
@@ -144,9 +143,6 @@ public class AccountRepositoryImpl implements AccountRepository {
             log.error(ERROR_FROM_UPDATING_BALANCE, e);
             throw new RuntimeException();
         }
+        return newBalance;
     }
 }
-
-
-
-

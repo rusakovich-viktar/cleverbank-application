@@ -1,40 +1,45 @@
 package ru.clevertec.service.impl;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
 import ru.clevertec.model.Account;
 import ru.clevertec.model.Transaction;
 import ru.clevertec.repository.TransactionRepository;
+import ru.clevertec.service.ReceiptService;
 import ru.clevertec.service.TransactionService;
 
 public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository transactionRepository;
+    private final ReceiptService receiptService;
 
-    public TransactionServiceImpl(TransactionRepository transactionRepository) {
+    public TransactionServiceImpl(TransactionRepository transactionRepository, ReceiptService receiptService) {
         this.transactionRepository = transactionRepository;
+        this.receiptService = receiptService;
     }
 
-    @Override
-    public Long createTransaction(Transaction transaction, Connection connection) {
-        return transactionRepository.createTransaction(transaction, connection);
-    }
+//    @Override
+//    public Transaction createTransaction(Transaction transaction, Connection connection) {
+//        return transactionRepository.saveTransaction(transaction, connection);
+//    }
 
     @Override
     public void doTransferFunds(Account sourceAccount, Account targetAccount, BigDecimal amount) {
-        transactionRepository.doTransferFunds(sourceAccount, targetAccount, amount);
-
+        Transaction transaction = transactionRepository.doTransferFunds(sourceAccount, targetAccount, amount);
+        receiptService.doGenerateTheReceipt(transaction);
     }
 
     @Override
-    public void replenishAccountBalance(Account account, BigDecimal amount) {
-        transactionRepository.replenishAccountBalance(account, amount);
+    public void replenishAccountBalance(Account sourceAccount, Account targetAccount, BigDecimal amount) {
+        Transaction transaction = transactionRepository.replenishAccountBalance(sourceAccount, targetAccount, amount);
+        receiptService.doGenerateTheReceipt(transaction);
     }
 
     @Override
-    public void withdrawFromAccount(Account account, BigDecimal amount) {
-        transactionRepository.withdrawFromAccount(account, amount);
-
+    public void withdrawFromAccount(Account sourceAccount, Account targetAccount, BigDecimal amount) {
+        Transaction transaction = transactionRepository.withdrawFromAccount(sourceAccount, targetAccount, amount);
+        receiptService.doGenerateTheReceipt(transaction);
     }
-
 }
+
+
+

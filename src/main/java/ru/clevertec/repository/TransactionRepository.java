@@ -7,12 +7,12 @@ import ru.clevertec.model.Transaction;
 
 public interface TransactionRepository {
 
-    Long createTransaction(Transaction transaction, Connection connection);
+    Transaction saveTransaction(Transaction transaction, Connection connection);
 
-    void doTransferFunds(Account sourceAccount, Account targetAccount, BigDecimal amount);
+    Transaction doTransferFunds(Account sourceAccount, Account targetAccount, BigDecimal amount);
 
-    void replenishAccountBalance(Account account, BigDecimal amount);
+    Transaction replenishAccountBalance(Account sourceAccount, Account targetAccount, BigDecimal amount);
 
-    void withdrawFromAccount(Account account, BigDecimal amount);
+    Transaction withdrawFromAccount(Account sourceAccount, Account targetAccount, BigDecimal amount);
 
 }

@@ -33,5 +33,4 @@ public class AccountServiceImpl implements AccountService {
     public Account findAccountByAccountNumber(String accountNumber) {
         return accountRepository.findAccountByAccountNumber(accountNumber);
     }
-
 }
