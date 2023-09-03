@@ -31,6 +31,9 @@ import ru.clevertec.model.User;
 import ru.clevertec.repository.AccountRepository;
 import ru.clevertec.repository.connection.ConnectionPool;
 
+/**
+ * Implementation of the {@link AccountRepository} interface that provides account data access services.
+ */
 @Log4j2
 public class AccountRepositoryImpl implements AccountRepository {
     public static final String FIND_USER_BY_LOGIN_AND_PASSWORD = "SELECT * FROM users WHERE login = ? AND password = ?";
@@ -57,6 +60,13 @@ public class AccountRepositoryImpl implements AccountRepository {
         return null;
     }
 
+    /**
+     * Creates a User object from a ResultSet.
+     *
+     * @param resultSet The ResultSet containing user data.
+     * @return A User object populated with data from the ResultSet.
+     * @throws SQLException If a database error occurs while retrieving data from the ResultSet.
+     */
     private User createUserFromResultSet(ResultSet resultSet) throws SQLException {
         User user = new User();
         user.setId(resultSet.getLong(ID));
@@ -97,7 +107,7 @@ public class AccountRepositoryImpl implements AccountRepository {
              PreparedStatement preparedStatement = connection.prepareStatement(FIND_ACCOUNT_BY_ACCOUNT_NUMBER)) {
             preparedStatement.setString(1, accountNumber);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                while (resultSet.next()) {
+                if (resultSet.next()) {
                     Account account = createAccountFromResultSet(resultSet);
 
                     Bank bank = createBankFromResultSet(resultSet);
@@ -135,7 +145,13 @@ public class AccountRepositoryImpl implements AccountRepository {
         return accounts;
     }
 
-
+    /**
+     * Creates an Account object from a ResultSet.
+     *
+     * @param resultSet The ResultSet containing account data.
+     * @return An Account object populated with data from the ResultSet.
+     * @throws SQLException If a database error occurs while retrieving data from the ResultSet.
+     */
     private static Account createAccountFromResultSet(ResultSet resultSet) throws SQLException {
         Account account = new Account();
         account.setId(resultSet.getLong(ID));
@@ -146,6 +162,13 @@ public class AccountRepositoryImpl implements AccountRepository {
         return account;
     }
 
+    /**
+     * Creates a Bank object from a ResultSet.
+     *
+     * @param resultSet The ResultSet containing bank data.
+     * @return A Bank object populated with data from the ResultSet.
+     * @throws SQLException If a database error occurs while retrieving data from the ResultSet.
+     */
     private static Bank createBankFromResultSet(ResultSet resultSet) throws SQLException {
         Bank bank = new Bank();
         bank.setId(resultSet.getLong(BANK_ID));

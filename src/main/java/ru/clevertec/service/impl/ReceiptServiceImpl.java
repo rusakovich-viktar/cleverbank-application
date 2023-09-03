@@ -12,6 +12,9 @@ import lombok.extern.log4j.Log4j2;
 import ru.clevertec.model.Transaction;
 import ru.clevertec.service.ReceiptService;
 
+/**
+ * Implementation of the {@link ReceiptService} interface that provides receipt generation services.
+ */
 @AllArgsConstructor
 @Getter
 @Setter

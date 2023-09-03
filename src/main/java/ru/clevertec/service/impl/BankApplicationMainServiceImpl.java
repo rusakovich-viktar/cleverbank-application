@@ -23,6 +23,7 @@ import static ru.clevertec.util.InputUtils.waitEnterKeyPressed;
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import ru.clevertec.model.Account;
 import ru.clevertec.model.User;
@@ -39,6 +40,7 @@ import ru.clevertec.service.TransactionService;
 import ru.clevertec.util.DrawUI;
 
 @Log4j2
+@NoArgsConstructor
 public class BankApplicationMainServiceImpl implements BankApplicationMainService {
 
     DatabaseMigrationService migrationService = new DatabaseMigrationServiceImpl();
@@ -49,16 +51,19 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
     AccountService accountService = new AccountServiceImpl(accountRepository, transactionService);
     SchedulerService schedulerService = new SchedulerServiceImpl(accountService, transactionService);
 
-    public BankApplicationMainServiceImpl() {
-
-    }
-
+    /**
+     * Runs the Clever Bank application by performing the following steps:
+     * 1. Migrates the database schema to apply necessary updates.
+     * 2. Sets the logging configuration.
+     * 3. Starts the periodic calculation of interest.
+     * 4. Manages user login and navigation through the main bank menu.
+     */
+    @Override
     public void doCleverBankApplicationRun() {
         migrationService.migrateDatabase();
         System.setProperty("log4j.configurationFile", "log4j2.yml");
         schedulerService.startPeriodicallyCalculateInterest();
 
-        boolean exit = false;
         boolean userLoggedIn = false;
         User userByLoginAndPassword = null;
 
@@ -76,13 +81,16 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
         } while (shouldContinue());
     }
 
+    /**
+     * Logs in a user by prompting for their login and password, and then authenticating them.
+     *
+     * @return The authenticated User object if login is successful, or null if authentication fails.
+     */
     private User loginUser() {
         DrawUI.drawEnterLoginOperationHeader();
         String userLogin = readStringFromConsole();
-
         DrawUI.drawEnterPasswordOperationHeader();
         String userPassword = readStringFromConsole();
-
         User user = accountService.getUserByLoginAndPassword(userLogin, userPassword);
 
         if (user != null) {
@@ -90,15 +98,27 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
         } else {
             log.info(LOGIN_REFUSE_MESSAGE);
         }
-
         return user;
     }
 
+    /**
+     * Determines whether the application should continue running.
+     *
+     * @return true if the application should continue running, false otherwise.
+     */
     private boolean shouldContinue() {
-
         return true;
     }
 
+    /**
+     * Displays the main bank menu and handles user interactions based on their choices.
+     *
+     * @param transactionService     The service for transaction-related operations.
+     * @param accountService         The service for account-related operations.
+     * @param userLoggedIn           A boolean indicating whether the user is logged in.
+     * @param userByLoginAndPassword The authenticated User object.
+     * @return true if the user is still logged in, false if they choose to logout or exit the program.
+     */
     private boolean showMainBankMenu(TransactionService transactionService, AccountService accountService, boolean userLoggedIn, User userByLoginAndPassword) {
         if (userLoggedIn) {
 
@@ -126,6 +146,12 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
         return userLoggedIn;
     }
 
+    /**
+     * Logs out the user and returns them to the login screen.
+     *
+     * @param userByLoginAndPassword The User object representing the logged-in user.
+     * @return false to indicate that the user is no longer logged in.
+     */
     private static boolean doLogout(User userByLoginAndPassword) {
         boolean userLoggedIn;
         log.warn("User" + userByLoginAndPassword.getLogin() + "is logout\n Exiting...");
@@ -133,7 +159,13 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
         return userLoggedIn;
     }
 
-
+    /**
+     * Handles main operations with the user's account based on their choice in the transaction menu.
+     *
+     * @param transactionService     The service for transaction-related operations.
+     * @param accountService         The service for account-related operations.
+     * @param userByLoginAndPassword The authenticated User object.
+     */
     private void doMainOperationsWithAccount(TransactionService transactionService, AccountService accountService, User userByLoginAndPassword) {
         drawTransactionMenu();
         int boundTransactionChoice = 3;
@@ -147,6 +179,81 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
         }
     }
 
+    /**
+     * Manages the inner menu for replenishing funds to a user's account.
+     *
+     * @param accountService         The service for account-related operations.
+     * @param userByLoginAndPassword The authenticated User object.
+     */
+    private void replenishInnerMenu(AccountService accountService, User
+            userByLoginAndPassword) {
+        List<Account> accounts;
+        Account sourceAccount = null;
+        Account targetAccount;
+        DrawUI.drawReplenishOperationHeader();
+        accounts = accountService.getAccountsByUserId(userByLoginAndPassword.getId());
+        if (!accounts.isEmpty()) {
+            for (int i = 0; i < accounts.size(); i++) {
+                System.out.println((i + 1) + ". Account Number: " + accounts.get(i).getAccountNumber() + "  || Current balance: " + accounts.get(i).getBalance());
+            }
+            int accountChoice = readIntFromConsoleWithoutBounds();
+            if (accountChoice >= 1 && accountChoice <= accounts.size()) {
+                targetAccount = accounts.get(accountChoice - 1);
+                log.info(ENTER_THE_AMOUNT);
+                BigDecimal amount = readIBigDecimalFromConsoleWithoutBounds();
+
+                transactionService.replenishAccountBalance(sourceAccount, targetAccount, amount);
+
+            } else {
+                log.info(INVALID_CHOICE_PLEASE_TRY_AGAIN);
+            }
+        } else {
+            log.info(NO_ACCOUNTS_FOUND_FOR_THE_USER);
+        }
+    }
+
+    /**
+     * Manages the inner menu for withdrawing funds from a user's account.
+     *
+     * @param accountService         The service for account-related operations.
+     * @param userByLoginAndPassword The authenticated User object.
+     */
+    private void withdrawInnerMenu(AccountService accountService, User
+            userByLoginAndPassword) {
+        List<Account> accounts;
+        Account sourceAccount;
+        Account targetAccount = null;
+        drawWithdrawOperationHeader();
+        accounts = accountService.getAccountsByUserId(userByLoginAndPassword.getId());
+        if (!accounts.isEmpty()) {
+            for (int i = 0; i < accounts.size(); i++) {
+                log.info((i + 1) + ". Account Number: " + accounts.get(i).getAccountNumber() + "  || Current balance: " + accounts.get(i).getBalance());
+            }
+            int accountChoice = readIntFromConsoleWithoutBounds();
+            if (accountChoice >= 1 && accountChoice <= accounts.size()) {
+                sourceAccount = accounts.get(accountChoice - 1);
+                log.info(ENTER_THE_AMOUNT);
+                BigDecimal amountToTargetWithdraw = readIBigDecimalFromConsoleWithoutBounds();
+                if (amountToTargetWithdraw.compareTo(sourceAccount.getBalance()) > 0) {
+                    log.info(INSUFFICIENT_FUNDS_ON_THE_ACCOUNT);
+                } else {
+                    transactionService.withdrawFromAccount(sourceAccount, targetAccount, amountToTargetWithdraw);
+                }
+            } else {
+                log.info(INVALID_CHOICE_PLEASE_TRY_AGAIN);
+            }
+        } else {
+            log.info(NO_ACCOUNTS_FOUND_FOR_THE_USER);
+        }
+    }
+
+    /**
+     * Manages the inner menu for transferring funds between accounts, including source and target selection.
+     *
+     * @param transactionService     The service for transaction-related operations.
+     * @param accountService         The service for account-related operations.
+     * @param userByLoginAndPassword The authenticated User object.
+     */
     private void transferInnerMenu(TransactionService transactionService,
                                    AccountService accountService,
                                    User userByLoginAndPassword) {
@@ -225,62 +332,13 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
 
     }
 
-    private void withdrawInnerMenu(AccountService accountService, User
-            userByLoginAndPassword) {
-        List<Account> accounts;
-        Account sourceAccount;
-        Account targetAccount = null;
-        drawWithdrawOperationHeader();
-        accounts = accountService.getAccountsByUserId(userByLoginAndPassword.getId());
-        if (!accounts.isEmpty()) {
-            for (int i = 0; i < accounts.size(); i++) {
-                log.info((i + 1) + ". Account Number: " + accounts.get(i).getAccountNumber() + "  || Current balance: " + accounts.get(i).getBalance());
-            }
-            int accountChoice = readIntFromConsoleWithoutBounds();
-            if (accountChoice >= 1 && accountChoice <= accounts.size()) {
-                sourceAccount = accounts.get(accountChoice - 1);
-                log.info(ENTER_THE_AMOUNT);
-                BigDecimal amountToTargetWithdraw = readIBigDecimalFromConsoleWithoutBounds();
-                if (amountToTargetWithdraw.compareTo(sourceAccount.getBalance()) > 0) {
-                    log.info(INSUFFICIENT_FUNDS_ON_THE_ACCOUNT);
-                } else {
-                    transactionService.withdrawFromAccount(sourceAccount, targetAccount, amountToTargetWithdraw);
-                }
-            } else {
-                log.info(INVALID_CHOICE_PLEASE_TRY_AGAIN);
-            }
-        } else {
-            log.info(NO_ACCOUNTS_FOUND_FOR_THE_USER);
-        }
-    }
-
-    private void replenishInnerMenu(AccountService accountService, User
-            userByLoginAndPassword) {
-        List<Account> accounts;
-        Account sourceAccount = null;
-        Account targetAccount;
-        DrawUI.drawReplenishOperationHeader();
-        accounts = accountService.getAccountsByUserId(userByLoginAndPassword.getId());
-        if (!accounts.isEmpty()) {
-            for (int i = 0; i < accounts.size(); i++) {
-                System.out.println((i + 1) + ". Account Number: " + accounts.get(i).getAccountNumber() + "  || Current balance: " + accounts.get(i).getBalance());
-            }
-            int accountChoice = readIntFromConsoleWithoutBounds();
-            if (accountChoice >= 1 && accountChoice <= accounts.size()) {
-                targetAccount = accounts.get(accountChoice - 1);
-                log.info(ENTER_THE_AMOUNT);
-                BigDecimal amount = readIBigDecimalFromConsoleWithoutBounds();
-
-                transactionService.replenishAccountBalance(sourceAccount, targetAccount, amount);
-
-            } else {
-                log.info(INVALID_CHOICE_PLEASE_TRY_AGAIN);
-            }
-        } else {
-            log.info(NO_ACCOUNTS_FOUND_FOR_THE_USER);
-        }
-    }
-
+    /**
+     * Displays information about the user's accounts, including the account numbers, balances, and associated banks.
+     * Allows the user to view details of individual accounts if desired.
+     *
+     * @param accountService         The service for account-related operations.
+     * @param userByLoginAndPassword The authenticated User object.
+     */
     private void viewAccountsInformation(AccountService accountService, User
             userByLoginAndPassword) {
 

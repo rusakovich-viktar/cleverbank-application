@@ -8,6 +8,9 @@ import ru.clevertec.repository.TransactionRepository;
 import ru.clevertec.service.ReceiptService;
 import ru.clevertec.service.TransactionService;
 
+/**
+ * Implementation of the {@link TransactionService} interface that provides transaction-related services.
+ */
 @Log4j2
 public class TransactionServiceImpl implements TransactionService {
 

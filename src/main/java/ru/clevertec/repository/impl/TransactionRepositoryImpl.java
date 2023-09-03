@@ -23,6 +23,9 @@ import ru.clevertec.repository.AccountRepository;
 import ru.clevertec.repository.TransactionRepository;
 import ru.clevertec.repository.connection.ConnectionPool;
 
+/**
+ * Implementation of the {@link TransactionRepository} interface that provides transaction data access services.
+ */
 @Log4j2
 public class TransactionRepositoryImpl implements TransactionRepository {
     public static final String CREATE_TRANSACTION = "INSERT INTO transactions (currency, amount, source_account_id, target_account_id, source_bank_id, target_bank_id, timestamp, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
@@ -32,6 +35,7 @@ public class TransactionRepositoryImpl implements TransactionRepository {
         this.accountRepository = accountRepository;
     }
 
+    @Override
     public Transaction saveTransaction(Transaction transaction, Connection connection) {
         try (PreparedStatement preparedStatement = connection.prepareStatement(CREATE_TRANSACTION, RETURN_GENERATED_KEYS)) {
             preparedStatement.setString(1, transaction.getCurrency().getCurrencyCode());
@@ -121,6 +125,15 @@ public class TransactionRepositoryImpl implements TransactionRepository {
         return null;
     }
 
+    /**
+     * Creates a Transaction object based on source and target accounts, amount, and transaction type.
+     *
+     * @param sourceAccount   The source account from which the transaction originates.
+     * @param targetAccount   The target account to which the transaction is directed.
+     * @param amount          The amount involved in the transaction.
+     * @param transactionType The type of transaction (e.g., deposit, withdrawal, transfer).
+     * @return A Transaction object initialized with the provided information.
+     */
     private Transaction createTransaction(Account sourceAccount, Account targetAccount, BigDecimal amount, TransactionType transactionType) {
         Transaction transactionWithoutId = new Transaction();
         if (sourceAccount == null) {
@@ -139,6 +152,14 @@ public class TransactionRepositoryImpl implements TransactionRepository {
         return transactionWithoutId;
     }
 
+    /**
+     * Calculates the new balance of an account based on the transaction type and amount.
+     *
+     * @param account         The account for which the new balance is calculated.
+     * @param amount          The amount involved in the transaction.
+     * @param transactionType The type of transaction (e.g., replenishment, withdrawal).
+     * @return The new balance of the account after the transaction.
+     */
     private BigDecimal calculateNewBalance(Account account, BigDecimal amount, TransactionType transactionType) {
         if (transactionType == REPLENISHMENT) {
             return account.getBalance().add(amount);
@@ -148,15 +169,41 @@ public class TransactionRepositoryImpl implements TransactionRepository {
         return account.getBalance();
     }
 
+    /**
+     * Creates a Transaction object, saves it, and returns the saved Transaction.
+     *
+     * @param sourceAccount   The source account from which the transaction originates.
+     * @param targetAccount   The target account to which the transaction is directed.
+     * @param amount          The amount involved in the transaction.
+     * @param transactionType The type of transaction (e.g., deposit, withdrawal, transfer).
+     * @param connection      The database connection for saving the transaction.
+     * @return The saved Transaction object.
+     */
     private Transaction createAndSaveTransaction(Account sourceAccount, Account targetAccount, BigDecimal amount, TransactionType transactionType, Connection connection) {
         Transaction transactionWithoutId = createTransaction(sourceAccount, targetAccount, amount, transactionType);
         return saveTransaction(transactionWithoutId, connection);
     }
 
+    /**
+     * Updates the balance of an account based on the transaction type and amount and saves the updated balance.
+     *
+     * @param account         The account for which the balance is updated.
+     * @param amount          The amount involved in the transaction.
+     * @param transactionType The type of transaction (e.g., replenishment, withdrawal).
+     * @param connection      The database connection for saving the updated balance.
+     * @return The updated balance of the account after the transaction.
+     */
     private BigDecimal updateBalance(Account account, BigDecimal amount, TransactionType transactionType, Connection connection) {
         return accountRepository.updateAccountBalance(account.getId(), calculateNewBalance(account, amount, transactionType), connection);
     }
 
+    /**
+     * Handles a transaction error by rolling back the database connection (if available) and logging the error details.
+     *
+     * @param connection   The database connection to be rolled back (if not null).
+     * @param errorMessage A descriptive error message.
+     * @param e            The exception that triggered the error.
+     */
     private void handleTransactionError(Connection connection, String errorMessage, Exception e) {
         try {
             if (connection != null) {
@@ -168,6 +215,11 @@ public class TransactionRepositoryImpl implements TransactionRepository {
         log.error(errorMessage, e);
     }
 
+    /**
+     * Closes a database connection and sets auto-commit mode to true (if the connection is not null).
+     *
+     * @param connection The database connection to be closed (if not null).
+     */
     private void closeConnection(Connection connection) {
         try {
             if (connection != null) {

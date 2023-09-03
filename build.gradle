@@ -10,6 +10,11 @@ shadowJar {
     configurations = [project.configurations.compileClasspath]
 }
 
+javadoc {
+    // Настройки для генерации Javadoc
+    options.addStringOption('author', 'true')
+
+}
 
 group 'ru.clevertec'
 version '1.0-SNAPSHOT'

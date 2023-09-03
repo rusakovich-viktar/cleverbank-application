@@ -5,6 +5,10 @@ import java.util.Scanner;
 import lombok.experimental.UtilityClass;
 import lombok.extern.log4j.Log4j2;
 
+/**
+ * Utility class for processing user input from the console.
+ * Provides methods for reading integers and strings, as well as waiting for the Enter key press.
+ */
 @UtilityClass
 @Log4j2
 public class InputUtils {
@@ -29,11 +33,17 @@ public class InputUtils {
     }
 
     public static String readStringFromConsole() {
+        while (!SCANNER.hasNextLine()) {
 
+            // Пока не доступна следующая строка, ждем
+        }
         return SCANNER.nextLine();
     }
 
     public static String readStringFromConsole(String message) {
+        while (!SCANNER.hasNextLine()) {
+            // Пока не доступна следующая строка, ждем
+        }
         log.info(message);
         return SCANNER.nextLine();
     }
@@ -47,6 +57,9 @@ public class InputUtils {
 
     public static int readIntFromConsoleWithoutBounds() {
         while (true) {
+            while (!SCANNER.hasNextLine()) {
+                // Пока не доступна следующая строка, ждем
+            }
             String userInput = InputUtils.readStringFromConsole();
             if ("exit".equalsIgnoreCase(userInput)) {
                 log.info("Выход из цикла");
@@ -62,10 +75,12 @@ public class InputUtils {
 
     public static BigDecimal readIBigDecimalFromConsoleWithoutBounds() {
         while (true) {
+            while (!SCANNER.hasNextLine()) {
+                // Пока не доступна следующая строка, ждем
+            }
             String userInput = InputUtils.readStringFromConsole();
             try {
-                BigDecimal bigDecimal = new BigDecimal(userInput);
-                return bigDecimal;
+                return new BigDecimal(userInput);
             } catch (NumberFormatException e) {
                 log.info("Введенное значение не является числом. Попробуйте снова.");
             }

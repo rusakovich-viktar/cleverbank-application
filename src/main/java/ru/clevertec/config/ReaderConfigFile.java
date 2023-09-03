@@ -11,7 +11,15 @@ import java.math.BigDecimal;
 import java.util.Map;
 import org.yaml.snakeyaml.Yaml;
 
+/**
+ * This class reads configuration data from a YAML file.
+ */
 public class ReaderConfigFile {
+    /**
+     * Retrieves the interest rate from the configuration file.
+     *
+     * @return The interest rate as a BigDecimal.
+     */
     public BigDecimal getInterestRate() {
         try (InputStream inputStream = ReaderConfigFile.class.getClassLoader().getResourceAsStream("property.yml")) {
             Yaml yaml = new Yaml();
@@ -24,6 +32,11 @@ public class ReaderConfigFile {
         }
     }
 
+    /**
+     * Retrieves Flyway configuration data from the configuration file.
+     *
+     * @return The FlywayConfig object containing database connection details.
+     */
     public FlywayConfig getFlywayConfig() {
         try (InputStream inputStream = ReaderConfigFile.class.getClassLoader().getResourceAsStream("property.yml")) {
             Yaml yaml = new Yaml();

@@ -3,6 +3,10 @@ package ru.clevertec.config;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * The `FlywayConfig` class represents the configuration for Flyway database migration.
+ * It contains information about the database URL, username, and password required for migration.
+ */
 @Getter
 @Setter
 public class FlywayConfig {

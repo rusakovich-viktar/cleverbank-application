@@ -23,6 +23,7 @@ public class Constants {
 
     @UtilityClass
     public class Attributes {
+
         public static final String JDBC_URL = "jdbcUrl";
         public static final String USERNAME = "username";
         public static final String PASSWORD = "password";

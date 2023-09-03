@@ -14,6 +14,9 @@ import ru.clevertec.service.AccountService;
 import ru.clevertec.service.SchedulerService;
 import ru.clevertec.service.TransactionService;
 
+/**
+ * Implementation of the {@link SchedulerService} interface that provides scheduling services.
+ */
 @Log4j2
 public class SchedulerServiceImpl implements SchedulerService {
     private ScheduledExecutorService scheduledExecutorService;
@@ -25,6 +28,7 @@ public class SchedulerServiceImpl implements SchedulerService {
         this.transactionService = transactionService;
     }
 
+    @Override
     public void startPeriodicallyCalculateInterest() {
         ReaderConfigFile readerConfigFile = new ReaderConfigFile();
         scheduledExecutorService = Executors.newScheduledThreadPool(1);
@@ -57,7 +61,7 @@ public class SchedulerServiceImpl implements SchedulerService {
         }, 0, 30, TimeUnit.SECONDS);
     }
 
-
+    @Override
     public void stopPeriodicallyInterestCalculation() {
         scheduledExecutorService.shutdown();
     }

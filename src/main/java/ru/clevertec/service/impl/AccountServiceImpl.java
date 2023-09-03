@@ -1,7 +1,5 @@
 package ru.clevertec.service.impl;
 
-import java.math.BigDecimal;
-import java.sql.Connection;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,9 +10,13 @@ import ru.clevertec.repository.AccountRepository;
 import ru.clevertec.service.AccountService;
 import ru.clevertec.service.TransactionService;
 
+/**
+ * Implementation of the {@link AccountService} interface that provides account-related services.
+ */
 @Getter
 @Setter
 @AllArgsConstructor
+
 public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
@@ -41,8 +43,5 @@ public class AccountServiceImpl implements AccountService {
         return accountRepository.getAllAccounts();
     }
 
-    @Override
-    public BigDecimal updateAccountBalance(Long accountId, BigDecimal newBalance, Connection connection) {
-        return accountRepository.updateAccountBalance(accountId, newBalance, connection);
-    }
+
 }

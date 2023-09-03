@@ -17,16 +17,30 @@ import java.util.Map;
 import lombok.extern.log4j.Log4j2;
 import org.yaml.snakeyaml.Yaml;
 
+/**
+ * This class provides a connection pool to the database using HikariCP.
+ */
 @Log4j2
 public class ConnectionPool {
 
     private static HikariDataSource dataSource = createDataSource();
 
+    /**
+     * Creates a new HikariCP data source based on the configuration.
+     *
+     * @return The HikariDataSource instance.
+     */
     private static HikariDataSource createDataSource() {
         HikariConfig config = loadConfig("property.yml");
         return new HikariDataSource(config);
     }
 
+    /**
+     * Loads the HikariCP configuration from a YAML file.
+     *
+     * @param configFile The name of the configuration file.
+     * @return The HikariConfig instance.
+     */
     private static HikariConfig loadConfig(String configFile) {
         try (InputStream inputStream = ConnectionPool.class.getClassLoader().getResourceAsStream(configFile)) {
             Yaml yaml = new Yaml();
@@ -45,6 +59,12 @@ public class ConnectionPool {
         }
     }
 
+    /**
+     * Retrieves a database connection from the connection pool.
+     *
+     * @return A Connection object.
+     * @throws SQLException If a database access error occurs.
+     */
     public static Connection getConnection() throws SQLException {
         return dataSource.getConnection();
     }

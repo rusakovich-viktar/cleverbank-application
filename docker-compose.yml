@@ -1,0 +1,30 @@
+version: '3.9'
+
+services:
+  cleverbank_db_docker:
+    image: postgres:15
+    container_name: clever_db
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - DB_PORT=5432
+    volumes:
+      - "../data/postgresql:/var/lib/postgresql/data"
+    ports:
+      - "54327:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+      interval: 10s
+      retries: 5
+      
+  java:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      cleverbank_db_docker:
+       condition: service_healthy
+    ports:
+      - "25680:8080"
+    container_name: clever_app
