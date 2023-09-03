@@ -14,7 +14,7 @@ public class Constants {
         public static final String ERROR_WITHDRAWAL = "Ошибка списания средств";
         public static final String LOGIN_SUCCESSFUL_MESSAGE = "Вход успешно выполнен";
         public static final String LOGIN_REFUSE_MESSAGE = "Во входе отказано. Проверьте введенные логин и пароль";
-        public static final String INVALID_CHOICE_PLEASE_TRY_AGAIN = "Некорректный выбор. Попробуйте еще раз";
+        public static final String INVALID_CHOICE_PLEASE_TRY_AGAIN = "Некорректный выбор. Попробуйте заново";
         public static final String NO_ACCOUNTS_FOUND_FOR_THE_USER = "У пользователя нет открытых счетов или они не найдены";
         public static final String INSUFFICIENT_FUNDS_ON_THE_ACCOUNT = "Недостаточно средств на счете";
         public static final String ENTER_A_NUMBER_BETWEEN_ONE_AND = "Введите число от 1 до ";

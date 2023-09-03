@@ -1,6 +1,15 @@
 plugins {
     id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
+    id 'org.flywaydb.flyway' version '9.22.0'
+
 }
+
+shadowJar {
+    configurations = [project.configurations.compileClasspath]
+}
+
 
 group 'ru.clevertec'
 version '1.0-SNAPSHOT'
@@ -9,23 +18,36 @@ repositories {
     mavenCentral()
 }
 
+configurations {
+    implementation.extendsFrom shadowImplementation
+    compileOnly.extendsFrom shadowCompileOnly
+    annotationProcessor.extendsFrom shadowAnnotationProcessor
+}
+
 dependencies {
+    shadowImplementation 'org.postgresql:postgresql:42.6.0'
+    shadowImplementation 'org.yaml:snakeyaml:2.1'
+    shadowImplementation 'org.apache.logging.log4j:log4j-core:2.20.0'
+    shadowImplementation 'org.apache.logging.log4j:log4j-api:2.20.0'
+    shadowImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.20.0'
+    shadowImplementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2'
+    shadowImplementation 'com.zaxxer:HikariCP:5.0.1'
+    shadowImplementation 'org.slf4j:slf4j-api:2.0.5'
+    shadowImplementation 'org.slf4j:slf4j-simple:2.0.5'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
     compileOnly 'org.projectlombok:lombok:1.18.28'
     annotationProcessor 'org.projectlombok:lombok:1.18.28'
-    implementation 'org.postgresql:postgresql:42.6.0'
-    implementation 'org.yaml:snakeyaml:2.1'
+    implementation 'org.flywaydb:flyway-core:9.22.0'
 
-    implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
-    implementation 'org.apache.logging.log4j:log4j-api:2.20.0'
-    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.20.0'
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2'
+}
 
+mainClassName = 'ru/clevertec/Main'
 
-    implementation 'com.zaxxer:HikariCP:5.0.1'
-    implementation 'org.slf4j:slf4j-api:2.0.5'
-    implementation 'org.slf4j:slf4j-simple:2.0.5'
+jar {
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
 }
 
 test {

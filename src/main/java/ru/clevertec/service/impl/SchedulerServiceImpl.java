@@ -28,10 +28,8 @@ public class SchedulerServiceImpl implements SchedulerService {
     public void startPeriodicallyCalculateInterest() {
         ReaderConfigFile readerConfigFile = new ReaderConfigFile();
         scheduledExecutorService = Executors.newScheduledThreadPool(1);
-        log.warn("startPeriodicallyCalculateInterest вызван.");
         scheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
-                log.info("Планировщик срабатывание (проверка даты)");
                 LocalDateTime currentTime = LocalDateTime.now();
                 int currentDayOfMonth = currentTime.getDayOfMonth();
                 if (currentDayOfMonth == currentTime.getMonth().length(currentTime.toLocalDate().isLeapYear())) {

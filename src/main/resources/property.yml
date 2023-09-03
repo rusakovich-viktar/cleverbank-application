@@ -1,4 +1,7 @@
 hikari:
+#  В докер-контейнере
+#  jdbcUrl: "jdbc:postgresql://cleverbank_db_docker:5432/postgres"
+#  Локально
   jdbcUrl: "jdbc:postgresql://localhost:5432/postgres"
   username: "postgres"
   password: "root"
