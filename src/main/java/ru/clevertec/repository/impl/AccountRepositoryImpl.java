@@ -37,10 +37,11 @@ public class AccountRepositoryImpl implements AccountRepository {
     public static final String FIND_ACCOUNTS_BY_USER_ID = "SELECT a.*, b.name FROM accounts a JOIN banks b ON a.bank_id = b.id WHERE user_id = ?";
     public static final String FIND_ACCOUNT_BY_ACCOUNT_NUMBER = "SELECT a.*, b.name, u.id, u.last_name  FROM accounts a  JOIN banks b ON a.bank_id = b.id  JOIN users u ON a.user_id = u.id  WHERE account_number = ?";
     public static final String UPDATE_ACCOUNT_BALANCE = "UPDATE accounts SET balance = ? WHERE id = ?";
+    public static final String FIND_ALL_ACCOUNTS = "SELECT a.*, b.name FROM accounts a JOIN banks b ON a.bank_id = b.id";
 
 
     @Override
-    public User findUserByLoginAndPassword(String login, String password) {
+    public User getUserByLoginAndPassword(String login, String password) {
         try (Connection connection = ConnectionPool.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(FIND_USER_BY_LOGIN_AND_PASSWORD)) {
             preparedStatement.setString(1, login);
@@ -69,7 +70,7 @@ public class AccountRepositoryImpl implements AccountRepository {
     }
 
     @Override
-    public List<Account> findAccountsByUserId(Long userId) {
+    public List<Account> getAccountsByUserId(Long userId) {
         List<Account> accounts = new ArrayList<>();
         try (Connection connection = ConnectionPool.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(FIND_ACCOUNTS_BY_USER_ID)) {
@@ -91,7 +92,7 @@ public class AccountRepositoryImpl implements AccountRepository {
     }
 
     @Override
-    public Account findAccountByAccountNumber(String accountNumber) {
+    public Account getAccountByAccountNumber(String accountNumber) {
         try (Connection connection = ConnectionPool.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(FIND_ACCOUNT_BY_ACCOUNT_NUMBER)) {
             preparedStatement.setString(1, accountNumber);
@@ -115,6 +116,25 @@ public class AccountRepositoryImpl implements AccountRepository {
         }
         return null;
     }
+
+    @Override
+    public List<Account> getAllAccounts() {
+        List<Account> accounts = new ArrayList<>();
+        try (Connection connection = ConnectionPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_ALL_ACCOUNTS);
+             ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                Account account = createAccountFromResultSet(resultSet);
+                Bank bank = createBankFromResultSet(resultSet);
+                account.setBank(bank);
+                accounts.add(account);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException();
+        }
+        return accounts;
+    }
+
 
     private static Account createAccountFromResultSet(ResultSet resultSet) throws SQLException {
         Account account = new Account();

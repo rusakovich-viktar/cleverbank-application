@@ -12,7 +12,8 @@ public class DrawUI {
         System.out.println("1. View account data");
         System.out.println("2. Показать информацию о счетах");
         System.out.println("3. Операции со счетами");
-        System.out.println("4. Завершить сеанс и выйти");
+        System.out.println("4. Завершить сеанс");
+        System.out.println("5. Завершить работу программы(служебное)");
 
     }
 

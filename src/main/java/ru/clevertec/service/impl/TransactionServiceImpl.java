@@ -1,12 +1,14 @@
 package ru.clevertec.service.impl;
 
 import java.math.BigDecimal;
+import lombok.extern.log4j.Log4j2;
 import ru.clevertec.model.Account;
 import ru.clevertec.model.Transaction;
 import ru.clevertec.repository.TransactionRepository;
 import ru.clevertec.service.ReceiptService;
 import ru.clevertec.service.TransactionService;
 
+@Log4j2
 public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository transactionRepository;
@@ -16,11 +18,6 @@ public class TransactionServiceImpl implements TransactionService {
         this.transactionRepository = transactionRepository;
         this.receiptService = receiptService;
     }
-
-//    @Override
-//    public Transaction createTransaction(Transaction transaction, Connection connection) {
-//        return transactionRepository.saveTransaction(transaction, connection);
-//    }
 
     @Override
     public void doTransferFunds(Account sourceAccount, Account targetAccount, BigDecimal amount) {
@@ -39,7 +36,6 @@ public class TransactionServiceImpl implements TransactionService {
         Transaction transaction = transactionRepository.withdrawFromAccount(sourceAccount, targetAccount, amount);
         receiptService.doGenerateTheReceipt(transaction);
     }
+
+
 }
-
-
-

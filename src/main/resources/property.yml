@@ -4,3 +4,6 @@ hikari:
   password: "root"
   minimumIdle: 10
   maximumPoolSize: 25
+
+bankOperations:
+  interestRate: "0.01"

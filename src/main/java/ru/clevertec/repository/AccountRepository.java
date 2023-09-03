@@ -8,11 +8,13 @@ import ru.clevertec.model.User;
 
 public interface AccountRepository {
 
-    User findUserByLoginAndPassword(String login, String password);
+    User getUserByLoginAndPassword(String login, String password);
 
-    List<Account> findAccountsByUserId(Long userId);
+    List<Account> getAccountsByUserId(Long userId);
 
-    Account findAccountByAccountNumber(String accountNumber);
+    Account getAccountByAccountNumber(String accountNumber);
+
+    List<Account> getAllAccounts();
 
     BigDecimal updateAccountBalance(Long accountId, BigDecimal newBalance, Connection connection);
 

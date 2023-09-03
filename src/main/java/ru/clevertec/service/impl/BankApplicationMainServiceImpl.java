@@ -30,6 +30,7 @@ import ru.clevertec.repository.impl.TransactionRepositoryImpl;
 import ru.clevertec.service.AccountService;
 import ru.clevertec.service.BankApplicationMainService;
 import ru.clevertec.service.ReceiptService;
+import ru.clevertec.service.SchedulerService;
 import ru.clevertec.service.TransactionService;
 import ru.clevertec.util.DrawUI;
 
@@ -42,9 +43,11 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
     ReceiptService receiptService = new ReceiptServiceImpl();
     TransactionService transactionService = new TransactionServiceImpl(transactionRepository, receiptService);
     AccountService accountService = new AccountServiceImpl(accountRepository, transactionService);
-
+    SchedulerService schedulerService = new SchedulerServiceImpl(accountService, transactionService);
 
     public void doCleverBankApplicationRun() {
+        System.setProperty("log4j.configurationFile", "log4j2.yml");
+        schedulerService.startPeriodicallyCalculateInterest();
 
         Scanner scanner = new Scanner(System.in);
         boolean userLoggedIn = false;
@@ -71,7 +74,7 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
         DrawUI.drawEnterPasswordOperationHeader();
         String userPassword = scanner.nextLine();
 
-        User user = accountService.findUserByLoginAndPassword(userLogin, userPassword);
+        User user = accountService.getUserByLoginAndPassword(userLogin, userPassword);
 
         if (user != null) {
             log.info(LOGIN_SUCCESSFUL_MESSAGE);
@@ -83,7 +86,7 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
     }
 
     private boolean shouldContinue() {
-        // Здесь может быть логика для завершения цикла, например, по команде пользователя
+
         return true;
     }
 
@@ -91,7 +94,7 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
         if (userLoggedIn) {
 
             drawStartMenuQ();
-            int bound = 4;
+            int bound = 5;
             int choice = readIntFromConsole(ENTER_A_NUMBER_BETWEEN_ONE_AND + bound, bound);
 
             switch (choice) {
@@ -100,19 +103,29 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
                 case 2 -> viewAccountsInformation(accountService, scanner, userByLoginAndPassword);
                 case 3 ->
                         doMainOperationsWithAccount(transactionService, accountService, scanner, userByLoginAndPassword);
-                case 4 -> userLoggedIn = doLogoutAndExit(userByLoginAndPassword);
+                case 4 -> userLoggedIn = doLogout(userByLoginAndPassword);
+                case 5 -> {
+                    log.info("Вы уверены, что хотите завершить работу программы? Действие необратимо (y/n)");
+                    String confirmation = scanner.next();
+                    if (confirmation.equalsIgnoreCase("y")) {
+                        log.warn("Программа остановлена в штатном режиме");
+                        schedulerService.stopPeriodicallyInterestCalculation();
+                        System.exit(0);
+                    }
+                }
                 default -> log.info(INVALID_CHOICE_PLEASE_TRY_AGAIN);
             }
         }
         return userLoggedIn;
     }
 
-    private static boolean doLogoutAndExit(User userByLoginAndPassword) {
+    private static boolean doLogout(User userByLoginAndPassword) {
         boolean userLoggedIn;
         log.warn("User" + userByLoginAndPassword.getLogin() + "is logout\n Exiting...");
         userLoggedIn = false;
         return userLoggedIn;
     }
+
 
     private void doMainOperationsWithAccount(TransactionService transactionService, AccountService accountService, Scanner scanner, User userByLoginAndPassword) {
         drawTransactionMenu();
@@ -136,7 +149,7 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
         Account sourceAccount;
         Account targetAccount = null;
 
-        accounts = accountService.findAccountsByUserId(userByLoginAndPassword.getId());
+        accounts = accountService.getAccountsByUserId(userByLoginAndPassword.getId());
         if (!accounts.isEmpty()) {
             for (int i = 0; i < accounts.size(); i++) {
                 System.out.println((i + 1) + ". Account Number: " + accounts.get(i).getAccountNumber() + "  || Current balance: " + accounts.get(i).getBalance());
@@ -166,7 +179,7 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
                     case 2 -> {
                         log.info("Введите номер счета получателя:");
                         String targetAccountNumber = scanner.next();
-                        targetAccount = accountService.findAccountByAccountNumber(targetAccountNumber);
+                        targetAccount = accountService.getAccountByAccountNumber(targetAccountNumber);
                         if (targetAccount == null) {
                             log.info("Счет получателя не найден. Пожалуйста, убедитесь, что вы ввели правильный номер счета.");
                         } else {
@@ -198,7 +211,7 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
         Account sourceAccount;
         Account targetAccount = null;
         drawWithdrawOperationHeader();
-        accounts = accountService.findAccountsByUserId(userByLoginAndPassword.getId());
+        accounts = accountService.getAccountsByUserId(userByLoginAndPassword.getId());
         if (!accounts.isEmpty()) {
             for (int i = 0; i < accounts.size(); i++) {
                 log.info((i + 1) + ". Account Number: " + accounts.get(i).getAccountNumber() + "  || Current balance: " + accounts.get(i).getBalance());
@@ -228,7 +241,7 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
         Account sourceAccount = null;
         Account targetAccount;
         DrawUI.drawReplenishOperationHeader();
-        accounts = accountService.findAccountsByUserId(userByLoginAndPassword.getId());
+        accounts = accountService.getAccountsByUserId(userByLoginAndPassword.getId());
         if (!accounts.isEmpty()) {
             for (int i = 0; i < accounts.size(); i++) {
                 System.out.println((i + 1) + ". Account Number: " + accounts.get(i).getAccountNumber() + "  || Current balance: " + accounts.get(i).getBalance());
@@ -256,7 +269,7 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
             userByLoginAndPassword) {
 
         drawViewAllAccountsOperationHeader();
-        List<Account> accounts = accountService.findAccountsByUserId(userByLoginAndPassword.getId());
+        List<Account> accounts = accountService.getAccountsByUserId(userByLoginAndPassword.getId());
 
         if (!accounts.isEmpty()) {
 

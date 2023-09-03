@@ -1,5 +1,7 @@
 package ru.clevertec.service.impl;
 
+import java.math.BigDecimal;
+import java.sql.Connection;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,18 +21,28 @@ public class AccountServiceImpl implements AccountService {
     private final TransactionService transactionService;
 
     @Override
-    public User findUserByLoginAndPassword(String login, String password) {
-        return accountRepository.findUserByLoginAndPassword(login, password);
+    public User getUserByLoginAndPassword(String login, String password) {
+        return accountRepository.getUserByLoginAndPassword(login, password);
     }
 
     @Override
-    public List<Account> findAccountsByUserId(Long userId) {
-        return accountRepository.findAccountsByUserId(userId);
+    public List<Account> getAccountsByUserId(Long userId) {
+        return accountRepository.getAccountsByUserId(userId);
     }
 
 
     @Override
-    public Account findAccountByAccountNumber(String accountNumber) {
-        return accountRepository.findAccountByAccountNumber(accountNumber);
+    public Account getAccountByAccountNumber(String accountNumber) {
+        return accountRepository.getAccountByAccountNumber(accountNumber);
+    }
+
+    @Override
+    public List<Account> getAllAccounts() {
+        return accountRepository.getAllAccounts();
+    }
+
+    @Override
+    public BigDecimal updateAccountBalance(Long accountId, BigDecimal newBalance, Connection connection) {
+        return accountRepository.updateAccountBalance(accountId, newBalance, connection);
     }
 }
