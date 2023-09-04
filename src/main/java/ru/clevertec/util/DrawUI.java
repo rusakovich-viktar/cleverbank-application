@@ -1,5 +1,9 @@
 package ru.clevertec.util;
 
+/**
+ * Class seems to be responsible for printing various menus and messages in the console.
+ * These methods provide a user-friendly interface for interacting with the program in the console.
+ */
 public class DrawUI {
 
     public static void drawStartMenuQ() {
@@ -9,10 +13,11 @@ public class DrawUI {
         System.out.println("*                                                          *");
         System.out.println("*              выберите один из пунктов меню               *");
         System.out.println("************************************************************");
-        System.out.println("1. View account data");
+        System.out.println("1. ");
         System.out.println("2. Показать информацию о счетах");
         System.out.println("3. Операции со счетами");
-        System.out.println("4. Завершить сеанс и выйти");
+        System.out.println("4. Завершить сеанс");
+        System.out.println("5. Завершить работу программы(служебное)");
 
     }
 
@@ -93,10 +98,14 @@ public class DrawUI {
 
     public static void drawLogo() {
         System.out.println();
-        System.out.println("\n" +
-                "⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n" +
-
-                "⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n");
+        System.out.println("""
+                ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+                ⣿⣿⠟⢉⣀⣈⠙⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿ WELCOME     ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+                ⣿⡇⢰⣿⠛⠻⠷⠾⠿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿ TO           ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+                ⣿⡇⠸⣿⣤⣴⡶⢶⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿ CLEVERBANK  ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+                ⣿⣿⣦⣈⠉⢉⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+                ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+                """);
     }
 
 }

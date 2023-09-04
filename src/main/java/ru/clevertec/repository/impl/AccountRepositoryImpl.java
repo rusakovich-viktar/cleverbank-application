@@ -1,5 +1,21 @@
 package ru.clevertec.repository.impl;
 
+import static ru.clevertec.util.Constants.Attributes.BALANCE;
+import static ru.clevertec.util.Constants.Attributes.BANK_ID;
+import static ru.clevertec.util.Constants.Attributes.CURRENCY;
+import static ru.clevertec.util.Constants.Attributes.DB_ACCOUNT_NUMBER;
+import static ru.clevertec.util.Constants.Attributes.DB_ACCOUNT_OPENING_DATE;
+import static ru.clevertec.util.Constants.Attributes.DB_FIRST_NAME;
+import static ru.clevertec.util.Constants.Attributes.DB_IDENTIFICATION_NUMBER_OF_PASSPORT;
+import static ru.clevertec.util.Constants.Attributes.DB_LAST_NAME;
+import static ru.clevertec.util.Constants.Attributes.DB_USER_ID;
+import static ru.clevertec.util.Constants.Attributes.ID;
+import static ru.clevertec.util.Constants.Attributes.LOGIN;
+import static ru.clevertec.util.Constants.Attributes.NAME;
+import static ru.clevertec.util.Constants.Attributes.PASSWORD;
+import static ru.clevertec.util.Constants.Attributes.PATRONYMIC;
+import static ru.clevertec.util.Constants.Messages.ERROR_FROM_UPDATING_BALANCE;
+
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,17 +31,20 @@ import ru.clevertec.model.User;
 import ru.clevertec.repository.AccountRepository;
 import ru.clevertec.repository.connection.ConnectionPool;
 
+/**
+ * Implementation of the {@link AccountRepository} interface that provides account data access services.
+ */
 @Log4j2
 public class AccountRepositoryImpl implements AccountRepository {
     public static final String FIND_USER_BY_LOGIN_AND_PASSWORD = "SELECT * FROM users WHERE login = ? AND password = ?";
     public static final String FIND_ACCOUNTS_BY_USER_ID = "SELECT a.*, b.name FROM accounts a JOIN banks b ON a.bank_id = b.id WHERE user_id = ?";
     public static final String FIND_ACCOUNT_BY_ACCOUNT_NUMBER = "SELECT a.*, b.name, u.id, u.last_name  FROM accounts a  JOIN banks b ON a.bank_id = b.id  JOIN users u ON a.user_id = u.id  WHERE account_number = ?";
     public static final String UPDATE_ACCOUNT_BALANCE = "UPDATE accounts SET balance = ? WHERE id = ?";
-
+    public static final String FIND_ALL_ACCOUNTS = "SELECT a.*, b.name FROM accounts a JOIN banks b ON a.bank_id = b.id";
 
 
     @Override
-    public User findUserByLoginAndPassword(String login, String password) {
+    public User getUserByLoginAndPassword(String login, String password) {
         try (Connection connection = ConnectionPool.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(FIND_USER_BY_LOGIN_AND_PASSWORD)) {
             preparedStatement.setString(1, login);
@@ -41,20 +60,27 @@ public class AccountRepositoryImpl implements AccountRepository {
         return null;
     }
 
+    /**
+     * Creates a User object from a ResultSet.
+     *
+     * @param resultSet The ResultSet containing user data.
+     * @return A User object populated with data from the ResultSet.
+     * @throws SQLException If a database error occurs while retrieving data from the ResultSet.
+     */
     private User createUserFromResultSet(ResultSet resultSet) throws SQLException {
         User user = new User();
-        user.setId(resultSet.getLong("id"));
-        user.setIdentificationNumberOfPassport(resultSet.getString("identification_number_of_passport"));
-        user.setFirstName(resultSet.getString("first_name"));
-        user.setLastName(resultSet.getString("last_name"));
-        user.setPatronymic(resultSet.getString("patronymic"));
-        user.setLogin(resultSet.getString("login"));
-        user.setPassword(resultSet.getString("password"));
+        user.setId(resultSet.getLong(ID));
+        user.setIdentificationNumberOfPassport(resultSet.getString(DB_IDENTIFICATION_NUMBER_OF_PASSPORT));
+        user.setFirstName(resultSet.getString(DB_FIRST_NAME));
+        user.setLastName(resultSet.getString(DB_LAST_NAME));
+        user.setPatronymic(resultSet.getString(PATRONYMIC));
+        user.setLogin(resultSet.getString(LOGIN));
+        user.setPassword(resultSet.getString(PASSWORD));
         return user;
     }
 
     @Override
-    public List<Account> findAccountsByUserId(Long userId) {
+    public List<Account> getAccountsByUserId(Long userId) {
         List<Account> accounts = new ArrayList<>();
         try (Connection connection = ConnectionPool.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(FIND_ACCOUNTS_BY_USER_ID)) {
@@ -76,20 +102,20 @@ public class AccountRepositoryImpl implements AccountRepository {
     }
 
     @Override
-    public Account findAccountByAccountNumber(String accountNumber) {
+    public Account getAccountByAccountNumber(String accountNumber) {
         try (Connection connection = ConnectionPool.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(FIND_ACCOUNT_BY_ACCOUNT_NUMBER)) {
             preparedStatement.setString(1, accountNumber);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                while (resultSet.next()) {
+                if (resultSet.next()) {
                     Account account = createAccountFromResultSet(resultSet);
 
                     Bank bank = createBankFromResultSet(resultSet);
                     account.setBank(bank);
 
                     User user = new User();
-                    user.setId(resultSet.getLong("user_id"));
-                    user.setLastName(resultSet.getString("last_name"));
+                    user.setId(resultSet.getLong(DB_USER_ID));
+                    user.setLastName(resultSet.getString(DB_LAST_NAME));
                     account.setUser(user);
 
                     return account;
@@ -99,39 +125,67 @@ public class AccountRepositoryImpl implements AccountRepository {
             log.error("SQLException from findAccountByAccountNumber", e);
         }
         return null;
-        //TODO
     }
 
+    @Override
+    public List<Account> getAllAccounts() {
+        List<Account> accounts = new ArrayList<>();
+        try (Connection connection = ConnectionPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_ALL_ACCOUNTS);
+             ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                Account account = createAccountFromResultSet(resultSet);
+                Bank bank = createBankFromResultSet(resultSet);
+                account.setBank(bank);
+                accounts.add(account);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException();
+        }
+        return accounts;
+    }
+
+    /**
+     * Creates an Account object from a ResultSet.
+     *
+     * @param resultSet The ResultSet containing account data.
+     * @return An Account object populated with data from the ResultSet.
+     * @throws SQLException If a database error occurs while retrieving data from the ResultSet.
+     */
     private static Account createAccountFromResultSet(ResultSet resultSet) throws SQLException {
         Account account = new Account();
-        account.setId(resultSet.getLong("id"));
-        account.setAccountNumber(resultSet.getString("account_number"));
-        account.setBalance(resultSet.getBigDecimal("balance"));
-        account.setCurrency(Currency.getInstance(resultSet.getString("currency")));
-        account.setAccountOpeningDate(resultSet.getTimestamp("account_opening_date").toLocalDateTime());
+        account.setId(resultSet.getLong(ID));
+        account.setAccountNumber(resultSet.getString(DB_ACCOUNT_NUMBER));
+        account.setBalance(resultSet.getBigDecimal(BALANCE));
+        account.setCurrency(Currency.getInstance(resultSet.getString(CURRENCY)));
+        account.setAccountOpeningDate(resultSet.getTimestamp(DB_ACCOUNT_OPENING_DATE).toLocalDateTime());
         return account;
     }
 
+    /**
+     * Creates a Bank object from a ResultSet.
+     *
+     * @param resultSet The ResultSet containing bank data.
+     * @return A Bank object populated with data from the ResultSet.
+     * @throws SQLException If a database error occurs while retrieving data from the ResultSet.
+     */
     private static Bank createBankFromResultSet(ResultSet resultSet) throws SQLException {
         Bank bank = new Bank();
-        bank.setId(resultSet.getLong("bank_id"));
-        bank.setName(resultSet.getString("name"));
+        bank.setId(resultSet.getLong(BANK_ID));
+        bank.setName(resultSet.getString(NAME));
         return bank;
     }
 
     @Override
-    public void updateAccountBalance(Long accountId, BigDecimal newBalance, Connection connection) {
+    public BigDecimal updateAccountBalance(Long accountId, BigDecimal newBalance, Connection connection) {
         try (PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_ACCOUNT_BALANCE)) {
             preparedStatement.setBigDecimal(1, newBalance);
             preparedStatement.setLong(2, accountId);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            log.error("Произошла ошибка при обновлении баланса", e);
+            log.error(ERROR_FROM_UPDATING_BALANCE, e);
             throw new RuntimeException();
         }
+        return newBalance;
     }
 }
-
-
-
-

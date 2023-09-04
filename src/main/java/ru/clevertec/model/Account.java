@@ -9,18 +9,51 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Represents a user's bank account in the system.
+ */
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class Account {
+    /**
+     * The unique identifier of the account.
+     */
     private Long id;
-    private String accountNumber;
-    private BigDecimal balance;
-    private Currency currency;
-    private LocalDateTime accountOpeningDate;
-    private User user;
-    private Bank bank;
-    private List<Transaction> transactions;
 
+    /**
+     * The account number associated with this account.
+     */
+    private String accountNumber;
+
+    /**
+     * The current balance of the account.
+     */
+    private BigDecimal balance;
+
+    /**
+     * The currency associated with the account balance.
+     */
+    private Currency currency;
+
+    /**
+     * The date and time when the account was opened.
+     */
+    private LocalDateTime accountOpeningDate;
+
+    /**
+     * The user to whom this account belongs.
+     */
+    private User user;
+
+    /**
+     * The bank where this account is held.
+     */
+    private Bank bank;
+
+    /**
+     * The list of transactions associated with this account.
+     */
+    private List<Transaction> transactions;
 }

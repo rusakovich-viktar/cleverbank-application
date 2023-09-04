@@ -1,0 +1,36 @@
+Configuration:
+  status: info
+  name: XMLConfigTest
+  packages: org.apache.logging.log4j.test
+
+  Appenders:
+    Console:
+      name: STDOUT
+      target: SYSTEM_OUT
+      PatternLayout:
+        Pattern: "%m %n"
+
+    RollingFile:
+      name: rollingFile
+      fileName: logs/log4j2.log
+      filePattern: logs/$${date:yyyy-MM}/app-%d{MM-dd-yyyy}-%i.log.gz
+      PatternLayout:
+        Pattern: "%d %p %c{1.} [%t] %m%n"
+      Policies:
+        TimeBasedTriggeringPolicy:
+          interval: 1
+        SizeBasedTriggeringPolicy:
+          size: 250 MB
+
+  Loggers:
+    Root:
+      level: info
+      AppenderRef:
+        - ref: STDOUT
+        - ref: rollingFile
+
+
+  Filters:
+    - ThresholdFilter:
+        level: warn
+
