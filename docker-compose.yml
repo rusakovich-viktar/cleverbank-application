@@ -18,13 +18,13 @@ services:
       interval: 10s
       retries: 5
       
-  java:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    depends_on:
-      cleverbank_db_docker:
-       condition: service_healthy
-    ports:
-      - "25680:8080"
-    container_name: clever_app
+#  java:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    depends_on:
+#      cleverbank_db_docker:
+#       condition: service_healthy
+#    ports:
+#      - "25680:8080"
+#    container_name: clever_app

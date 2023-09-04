@@ -43,7 +43,7 @@ import ru.clevertec.util.DrawUI;
 @NoArgsConstructor
 public class BankApplicationMainServiceImpl implements BankApplicationMainService {
 
-    DatabaseMigrationService migrationService = new DatabaseMigrationServiceImpl();
+
     AccountRepository accountRepository = new AccountRepositoryImpl();
     TransactionRepository transactionRepository = new TransactionRepositoryImpl(accountRepository);
     ReceiptService receiptService = new ReceiptServiceImpl();
@@ -60,7 +60,6 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
      */
     @Override
     public void doCleverBankApplicationRun() {
-        migrationService.migrateDatabase();
         System.setProperty("log4j.configurationFile", "log4j2.yml");
         schedulerService.startPeriodicallyCalculateInterest();
 
@@ -133,7 +132,8 @@ public class BankApplicationMainServiceImpl implements BankApplicationMainServic
                 case 3 -> doMainOperationsWithAccount(transactionService, accountService, userByLoginAndPassword);
                 case 4 -> userLoggedIn = doLogout(userByLoginAndPassword);
                 case 5 -> {
-                    String confirmation = readStringFromConsole("Вы уверены, что хотите завершить работу программы? Действие необратимо (y/n)");
+                    log.info("Вы уверены, что хотите завершить работу программы? Действие необратимо (y/n)");
+                    String confirmation = readStringFromConsole();
                     if (confirmation.equalsIgnoreCase("y")) {
                         log.warn("Программа остановлена в штатном режиме");
                         schedulerService.stopPeriodicallyInterestCalculation();

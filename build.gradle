@@ -10,11 +10,6 @@ shadowJar {
     configurations = [project.configurations.compileClasspath]
 }
 
-javadoc {
-    // Настройки для генерации Javadoc
-    options.addStringOption('author', 'true')
-
-}
 
 group 'ru.clevertec'
 version '1.0-SNAPSHOT'
@@ -44,7 +39,19 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.28'
     annotationProcessor 'org.projectlombok:lombok:1.18.28'
     implementation 'org.flywaydb:flyway-core:9.22.0'
+}
 
+flyway {
+    url = 'jdbc:postgresql://localhost:5432/postgres'
+    user = 'postgres'
+    password = 'root'
+    baselineOnMigrate = true
+}
+
+task runWithMigration(type: JavaExec) {
+    dependsOn flywayMigrate
+    main = 'ru.clevertec.Main'
+    classpath = sourceSets.main.runtimeClasspath
 }
 
 mainClassName = 'ru/clevertec/Main'

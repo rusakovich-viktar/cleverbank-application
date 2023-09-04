@@ -7,6 +7,8 @@ public class Main {
 
     public static void main(String[] args) {
         BankApplicationMainService bankApplicationMainService = new BankApplicationMainServiceImpl();
+//        DatabaseMigrationService migrationService = new DatabaseMigrationServiceImpl();
+//        migrationService.migrateDatabase();
         bankApplicationMainService.doCleverBankApplicationRun();
     }
 }
